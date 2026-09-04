@@ -18,6 +18,7 @@ import Kalkulyator from "./pages/Kalkulyator.jsx";
 import Tarix from "./pages/Tarix.jsx";
 import Employees from "./pages/Employees.jsx";
 import CustomerCatalog from "./pages/CustomerCatalog.jsx";
+import Profil from "./pages/Profil.jsx";
 
 const PAGES = {
   dashboard: { c: Dashboard, kicker: "Bugun", title: "Asosiy" },
@@ -32,10 +33,10 @@ const PAGES = {
   kalkulyator: { c: Kalkulyator, kicker: "Hajm va narx", title: "Kalkulyator" },
   tarix: { c: Tarix, kicker: "Cheklar", title: "Savdo tarixi" },
   employees: { c: Employees, kicker: "Kadrlar", title: "Xodimlar" },
+  profil: { c: Profil, kicker: "Hisob", title: "Profil" },
   // customer-only
   savat: { c: CustomerCatalog, kicker: "Xarid", title: "Savat", customerTab: "cart" },
   xaridlar: { c: CustomerCatalog, kicker: "Tarix", title: "Xaridlar", customerTab: "orders" },
-  hisobim: { c: CustomerCatalog, kicker: "Profil", title: "Mening hisobim", customerTab: "me" },
 };
 
 function Shelled() {

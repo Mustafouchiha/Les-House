@@ -1,16 +1,22 @@
 // Thin wrapper over the Telegram WebApp SDK with a browser dev fallback.
 
+import { applyTheme, getThemePref } from "./theme.js";
+
 const tg = typeof window !== "undefined" ? window.Telegram?.WebApp : undefined;
 
 export const isTelegram = !!(tg && tg.initData);
 
 export function initTelegram() {
+  applyTheme(); // apply the saved light/dark preference (works with or without Telegram)
   if (!tg) return;
   try {
     tg.ready();
     tg.expand();
-    applyTheme();
-    tg.onEvent?.("themeChanged", applyTheme);
+    applyTelegramColors();
+    tg.onEvent?.("themeChanged", () => {
+      applyTelegramColors();
+      applyTheme();
+    });
     tg.onEvent?.("viewportChanged", () => {
       document.documentElement.style.setProperty(
         "--tg-viewport-height",
@@ -22,8 +28,10 @@ export function initTelegram() {
   }
 }
 
-function applyTheme() {
-  if (!tg) return;
+// Pull Telegram's palette into our color vars, but only while the user hasn't
+// forced light/dark themselves.
+function applyTelegramColors() {
+  if (!tg || getThemePref() !== "system") return;
   const p = tg.themeParams || {};
   const root = document.documentElement;
   const map = {
@@ -33,7 +41,6 @@ function applyTheme() {
     "--color-accent": p.button_color,
   };
   for (const [k, v] of Object.entries(map)) if (v) root.style.setProperty(k, v);
-  if (tg.colorScheme) root.setAttribute("data-theme", tg.colorScheme);
 }
 
 // Telegram initData string for server-side validation (empty in the browser).

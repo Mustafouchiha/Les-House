@@ -15,8 +15,8 @@ const CartCtx = createContext(null);
 
 // ---- role → permitted nav sections (spec §26) ----
 export const NAV_BY_ROLE = {
-  CUSTOMER: ["mahsulotlar", "savat", "kalkulyator", "hisobim", "xaridlar"],
-  WORKER: ["savdo", "mijozlar", "tarix"],
+  CUSTOMER: ["mahsulotlar", "savat", "kalkulyator", "xaridlar", "profil"],
+  WORKER: ["savdo", "mijozlar", "tarix", "profil"],
   OPERATOR: [
     "dashboard",
     "savdo",
@@ -27,6 +27,7 @@ export const NAV_BY_ROLE = {
     "qarzlar",
     "kassa",
     "tarix",
+    "profil",
   ],
   MANAGER: [
     "dashboard",
@@ -39,6 +40,7 @@ export const NAV_BY_ROLE = {
     "hisobotlar",
     "kassa",
     "tarix",
+    "profil",
   ],
   ADMIN: [
     "dashboard",
@@ -53,6 +55,7 @@ export const NAV_BY_ROLE = {
     "kalkulyator",
     "employees",
     "tarix",
+    "profil",
   ],
 };
 

@@ -15,8 +15,8 @@ const LABELS = {
   kalkulyator: "Kalkulyator",
   employees: "Xodimlar",
   tarix: "Savdo tarixi",
+  profil: "Profil",
   savat: "Savat",
-  hisobim: "Mening hisobim",
   xaridlar: "Xaridlar",
 };
 
@@ -128,9 +128,31 @@ export default function Shell({ page, setPage, title, kicker, children }) {
                 {title}
               </div>
             </div>
-            <span style={{ fontSize: 11, letterSpacing: ".12em", color: "var(--color-accent-700)" }}>
-              {isTelegram ? "TELEGRAM" : "WEB"}
-            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
+              <span style={{ fontSize: 11, letterSpacing: ".12em", color: "var(--color-accent-700)" }}>
+                {isTelegram ? "TELEGRAM" : "WEB"}
+              </span>
+              <button
+                onClick={() => setPage("profil")}
+                title="Profil"
+                aria-label="Profil"
+                data-active={page === "profil"}
+                style={{
+                  width: 34, height: 34, flex: "none", cursor: "pointer",
+                  borderRadius: "50%", overflow: "hidden", padding: 0,
+                  border: "1px solid var(--color-accent-400)",
+                  background: page === "profil" ? "var(--color-accent)" : "var(--color-accent-100)",
+                  color: page === "profil" ? "#fff" : "var(--color-accent-800)",
+                  fontFamily: "var(--font-heading)", fontSize: 13, textTransform: "uppercase",
+                }}
+              >
+                {me?.photoUrl ? (
+                  <img src={me.photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  ((me?.firstName || "?")[0] || "") + ((me?.lastName || "")[0] || "")
+                )}
+              </button>
+            </div>
           </header>
 
           <main className="tb-scroll scroll">{children}</main>
@@ -173,10 +195,11 @@ export default function Shell({ page, setPage, title, kicker, children }) {
       )}
 
       <style>{`
-        .tb-sidebar{width:236px;flex:none;background:var(--color-accent-900);color:#fff;display:flex;flex-direction:column}
+        .tb-sidebar{width:236px;flex:none;background:var(--nav-bg);color:var(--nav-fg);display:flex;flex-direction:column}
+        .tb-sidebar > div:first-child{border-color:rgba(255,255,255,.14)!important}
         .tb-navbtn{display:flex;align-items:center;gap:var(--space-2);width:100%;padding:var(--space-3);border:0;cursor:pointer;text-align:left;font-family:var(--font-body);font-size:13.5px;background:transparent;color:rgba(255,255,255,.86)}
         .tb-navbtn[data-active="true"]{background:var(--color-accent);color:#fff;font-weight:600}
-        .tb-topbar{flex:none;display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-6);padding:calc(var(--space-6) + var(--safe-top)) var(--space-8) var(--space-6);border-bottom:1px solid var(--color-accent-200);position:sticky;top:0;background:var(--color-bg);z-index:10}
+        .tb-topbar{flex:none;display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-6);padding:calc(var(--space-6) + var(--safe-top)) var(--space-8) var(--space-6);border-bottom:1px solid var(--color-divider);position:sticky;top:0;background:var(--color-bg);z-index:10}
         .tb-scroll{flex:1;min-height:0;overflow:auto;padding:var(--space-8)}
         .tb-bottomnav{display:none}
         @media (max-width: 860px){

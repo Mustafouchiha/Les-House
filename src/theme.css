@@ -35,6 +35,13 @@
   --danger: #a3302a;
   --danger-bg: #fdeceb;
 
+  /* semantic surfaces that must stay dark-green in BOTH themes */
+  --nav-bg: #072e19;
+  --nav-fg: #ffffff;
+  --nav-fg-dim: #a3d3b8;
+  --table-head-bg: #072e19;
+  --table-head-fg: #ffffff;
+
   --font-heading: "Barlow Condensed", system-ui, "Segoe UI", sans-serif;
   --font-body: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
@@ -59,25 +66,64 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --color-bg: #14181a;
-    --color-surface: #1c2124;
-    --color-text: #eef2f0;
-    --color-divider: color-mix(in srgb, #eef2f0 18%, transparent);
-    --color-neutral-800: #c6c9c8;
+    --color-bg: #121613;
+    --color-surface: #1a211c;
+    --color-text: #e8efe9;
+    --color-divider: color-mix(in srgb, #e8efe9 16%, transparent);
+
+    /* green ramp inverted: 100 = darkest (fills), 900 = lightest (ink) */
+    --color-accent-100: #16241c;
+    --color-accent-200: #203329;
+    --color-accent-300: #2c4a3a;
+    --color-accent-400: #3d6b52;
+    --color-accent-500: #17874a;
+    --color-accent-600: #4fae7e;
+    --color-accent-700: #83c9a3;
+    --color-accent-800: #a6d9bd;
+    --color-accent-900: #cdead9;
+
     --color-neutral-700: #a9adac;
+    --color-neutral-800: #c6c9c8;
+    --color-neutral-900: #e8efe9;
+
+    --warn: #e6b566;
     --warn-bg: #2a2213;
+    --danger: #e79b95;
     --danger-bg: #2c1615;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 3px 10px rgba(0, 0, 0, 0.55);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
   }
 }
 :root[data-theme="dark"] {
-  --color-bg: #14181a;
-  --color-surface: #1c2124;
-  --color-text: #eef2f0;
-  --color-divider: color-mix(in srgb, #eef2f0 18%, transparent);
-  --color-neutral-800: #c6c9c8;
+  --color-bg: #121613;
+  --color-surface: #1a211c;
+  --color-text: #e8efe9;
+  --color-divider: color-mix(in srgb, #e8efe9 16%, transparent);
+
+  --color-accent-100: #16241c;
+  --color-accent-200: #203329;
+  --color-accent-300: #2c4a3a;
+  --color-accent-400: #3d6b52;
+  --color-accent-500: #17874a;
+  --color-accent-600: #4fae7e;
+  --color-accent-700: #83c9a3;
+  --color-accent-800: #a6d9bd;
+  --color-accent-900: #cdead9;
+
   --color-neutral-700: #a9adac;
+  --color-neutral-800: #c6c9c8;
+  --color-neutral-900: #e8efe9;
+
+  --warn: #e6b566;
   --warn-bg: #2a2213;
+  --danger: #e79b95;
   --danger-bg: #2c1615;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 3px 10px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
 }
 
 *,
@@ -272,8 +318,8 @@ textarea.input {
   font-size: 11px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #fff;
-  background: var(--color-accent-900);
+  color: var(--table-head-fg);
+  background: var(--table-head-bg);
   padding: var(--space-2);
 }
 .table td {
