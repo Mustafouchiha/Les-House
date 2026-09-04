@@ -85,7 +85,7 @@ export default function Shell({ page, setPage, title, kicker, children }) {
   const primary = (PHONE_PRIMARY[me?.role] || []).filter((k) => allowed.includes(k));
 
   return (
-    <div style={{ minHeight: "100%", display: "flex", flexDirection: "column" }}>
+    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <DevBar me={me} />
       <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
         {/* desktop sidebar */}
@@ -120,7 +120,7 @@ export default function Shell({ page, setPage, title, kicker, children }) {
         </aside>
 
         {/* main column */}
-        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+        <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: "flex", flexDirection: "column" }}>
           <header className="tb-topbar">
             <div>
               <div className="kicker">{kicker}</div>
@@ -200,16 +200,23 @@ export default function Shell({ page, setPage, title, kicker, children }) {
         .tb-navbtn{display:flex;align-items:center;gap:var(--space-2);width:100%;padding:var(--space-3);border:0;cursor:pointer;text-align:left;font-family:var(--font-body);font-size:13.5px;background:transparent;color:rgba(255,255,255,.86)}
         .tb-navbtn[data-active="true"]{background:var(--color-accent);color:#fff;font-weight:600}
         .tb-topbar{flex:none;display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-6);padding:calc(var(--space-6) + var(--safe-top)) var(--space-8) var(--space-6);border-bottom:1px solid var(--color-divider);position:sticky;top:0;background:var(--color-bg);z-index:10}
-        .tb-scroll{flex:1;min-height:0;overflow:auto;padding:var(--space-8)}
+        .tb-scroll{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;padding:var(--space-8)}
         .tb-bottomnav{display:none}
         @media (max-width: 860px){
           .tb-sidebar{display:none}
           .tb-topbar{padding:calc(var(--space-3) + var(--safe-top)) var(--space-4) var(--space-3)}
           .tb-topbar > div > div:last-child{font-size:19px}
-          .tb-scroll{padding:var(--space-4)}
-          .tb-bottomnav{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;flex:none;border-top:1px solid var(--color-accent-300);background:var(--color-accent-100);padding-bottom:var(--safe-bottom)}
+          .tb-scroll{padding:var(--space-4);padding-bottom:calc(var(--bottomnav-h) + var(--space-4))}
+          /* fixed to the viewport, not to page flow, so it can never scroll out of view */
+          .tb-bottomnav{
+            display:grid;grid-auto-flow:column;grid-auto-columns:1fr;
+            position:fixed;left:0;right:0;bottom:0;z-index:30;
+            border-top:1px solid var(--color-accent-300);background:var(--color-accent-100);
+            padding-bottom:var(--safe-bottom);
+          }
           .tb-bottomnav button{border:0;background:transparent;padding:var(--space-3) 2px calc(var(--space-3));cursor:pointer;color:var(--color-accent-700);font-family:var(--font-heading);font-size:12.5px}
           .tb-bottomnav button[data-active="true"]{color:var(--color-accent-900);border-top:2px solid var(--color-accent);margin-top:-1px;font-weight:600}
+          .toast{bottom:calc(var(--bottomnav-h) + var(--safe-bottom) + 14px)}
         }
       `}</style>
     </div>

@@ -203,6 +203,17 @@ export function CartProvider({ children }) {
     );
   }, []);
 
+  // let the seller type the total directly; back-solve the rounding/discount
+  // adjustment needed to hit it (spec: "Jami" ham o'zgartirsa bo'lsin)
+  const setFinalTotal = useCallback(
+    (totalStr) => {
+      const target = parseNum(totalStr);
+      const sub = lines.reduce((a, l) => a + l.price * l.qty, 0);
+      setRounding(+(sub - parseNum(discount) - target).toFixed(2));
+    },
+    [lines, discount]
+  );
+
   const setPrice = useCallback((productId, priceStr) => {
     setLines((prev) =>
       prev.map((l) =>
@@ -230,6 +241,7 @@ export function CartProvider({ children }) {
       add,
       update,
       setLineTotal,
+      setFinalTotal,
       setPrice,
       remove,
       clear,
@@ -241,7 +253,20 @@ export function CartProvider({ children }) {
       finalTotal,
       count: lines.length,
     }),
-    [lines, add, update, setLineTotal, setPrice, remove, clear, discount, rounding, subtotal, finalTotal]
+    [
+      lines,
+      add,
+      update,
+      setLineTotal,
+      setFinalTotal,
+      setPrice,
+      remove,
+      clear,
+      discount,
+      rounding,
+      subtotal,
+      finalTotal,
+    ]
   );
 
   return <CartCtx.Provider value={value}>{children}</CartCtx.Provider>;

@@ -2,9 +2,11 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
 import "./theme.css";
-import { applyTheme } from "./theme.js";
+import { applyTheme, applyAccent } from "./theme.js";
 
-applyTheme(); // apply saved light/dark preference before first paint
+// apply saved light/dark + accent color preference before first paint
+applyTheme();
+applyAccent();
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

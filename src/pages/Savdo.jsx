@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../api/client.js";
 import { useAuth, useCart } from "../store.jsx";
 import { fmt, qty as qtyFmt, UNIT_LABEL, parseNum, AVAILABILITY_LABEL } from "../lib/format.js";
 import { Blueprint, Corners, Toast, Loader, PriceDot, priceHealth } from "../components/ui.jsx";
 import Receipt from "../components/Receipt.jsx";
+import { ProductThumb } from "./Mahsulotlar.jsx";
 
 export default function Savdo() {
   const { me } = useAuth();
@@ -110,6 +111,7 @@ export default function Savdo() {
                 flash(`${p.name} savatga qo'shildi`);
               }}
             >
+              <ProductThumb images={p.images} size={72} />
               <span style={{ fontSize: 10, letterSpacing: ".12em", color: "var(--color-accent-600)" }}>{p.sku}</span>
               <span style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.25 }}>{p.name}</span>
               <span style={{ marginTop: "auto", fontFamily: "var(--font-heading)", fontSize: 16, color: "var(--color-accent-800)" }}>
@@ -235,6 +237,13 @@ function CartLine({ l, cart, me }) {
 }
 
 function Totals({ cart }) {
+  const [totalText, setTotalText] = useState(String(Math.round(cart.finalTotal)));
+  const editingRef = useRef(false);
+
+  useEffect(() => {
+    if (!editingRef.current) setTotalText(String(Math.round(cart.finalTotal)));
+  }, [cart.finalTotal]);
+
   return (
     <div style={{ margin: "var(--space-6) 0 var(--space-4)", display: "grid", gap: "var(--space-2)" }}>
       <Row label="Oraliq" value={fmt(cart.subtotal)} />
@@ -246,11 +255,28 @@ function Totals({ cart }) {
         <span style={{ fontSize: 12 }}>Yaxlitlash</span>
         <input className="input" style={{ width: 120 }} value={String(cart.rounding)} onChange={(e) => cart.setRounding(e.target.value)} />
       </div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", borderTop: "1px solid var(--color-accent-300)", paddingTop: "var(--space-3)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--color-accent-300)", paddingTop: "var(--space-3)" }}>
         <span className="kicker">Jami</span>
-        <span style={{ fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 26, color: "var(--color-accent-900)" }}>
-          {fmt(cart.finalTotal)}
-        </span>
+        <input
+          className="input"
+          style={{
+            width: 150, textAlign: "right", fontFamily: "var(--font-heading)",
+            fontWeight: 600, fontSize: 22, color: "var(--color-accent-900)",
+          }}
+          value={totalText}
+          onFocus={() => { editingRef.current = true; }}
+          onBlur={() => {
+            editingRef.current = false;
+            setTotalText(String(Math.round(cart.finalTotal)));
+          }}
+          onChange={(e) => {
+            setTotalText(e.target.value);
+            cart.setFinalTotal(e.target.value);
+          }}
+        />
+      </div>
+      <div className="muted" style={{ fontSize: 11, textAlign: "right" }}>
+        Jamini o'zgartirsangiz, yaxlitlash avtomatik moslashadi
       </div>
     </div>
   );

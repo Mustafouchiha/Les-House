@@ -3,6 +3,7 @@ import { api } from "../api/client.js";
 import { useAuth, useCart } from "../store.jsx";
 import { fmt, qty as qtyFmt, UNIT_LABEL, AVAILABILITY_LABEL, AVAILABILITY_TAG } from "../lib/format.js";
 import { Blueprint, Loader } from "../components/ui.jsx";
+import { ProductThumb } from "./Mahsulotlar.jsx";
 
 // Customer-facing: catalog + estimate cart + purchase history + profile.
 // Never shows cost, min price, supplier, margins (spec §11, §34).
@@ -87,6 +88,7 @@ export default function CustomerCatalog({ customerTab = "catalog" }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: "var(--space-3)" }}>
         {filtered.map((p) => (
           <Blueprint key={p.id} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <ProductThumb images={p.images} />
             <div style={{ fontFamily: "var(--font-heading)", fontSize: 17, color: "var(--color-accent-900)" }}>{p.name}</div>
             <div style={{ fontSize: 12 }} className="muted">
               {[p.sizeLabel, p.material, p.quality].filter(Boolean).join(" · ")}

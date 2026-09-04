@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../store.jsx";
 import { isTelegram, closeApp } from "../telegram.js";
-import { getThemePref, setThemePref } from "../theme.js";
+import { getThemePref, setThemePref, getAccentPref, setAccentPref, ACCENT_PRESETS } from "../theme.js";
 import { Blueprint, Segmented } from "../components/ui.jsx";
 
 const THEME_OPTS = [
@@ -21,6 +21,7 @@ const ROLE_LABEL = {
 export default function Profil() {
   const { me, logout } = useAuth();
   const [theme, setTheme] = useState(getThemePref());
+  const [accent, setAccent] = useState(getAccentPref());
   const [confirm, setConfirm] = useState(false);
 
   const initials =
@@ -83,6 +84,56 @@ export default function Profil() {
         />
         <div className="muted" style={{ fontSize: 11 }}>
           "Tizim" — {isTelegram ? "Telegram mavzusiga" : "qurilma sozlamasiga"} moslashadi.
+        </div>
+      </Blueprint>
+
+      <Blueprint style={{ display: "grid", gap: "var(--space-3)" }}>
+        <div className="kicker">Rang</div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          {ACCENT_PRESETS.map((p) => (
+            <button
+              key={p.hex}
+              title={p.name}
+              aria-label={p.name}
+              onClick={() => {
+                setAccent(p.hex);
+                setAccentPref(p.hex);
+              }}
+              style={{
+                width: 30, height: 30, borderRadius: "50%", cursor: "pointer",
+                background: p.hex, flex: "none",
+                border: accent.toLowerCase() === p.hex ? "2px solid var(--color-text)" : "1px solid var(--color-divider)",
+                boxShadow: accent.toLowerCase() === p.hex ? "0 0 0 2px var(--color-surface) inset" : "none",
+                outlineOffset: 2,
+              }}
+            />
+          ))}
+          <label
+            title="O'zingiz tanlang"
+            style={{
+              width: 30, height: 30, borderRadius: "50%", cursor: "pointer",
+              position: "relative", overflow: "hidden", flex: "none",
+              border: "1px dashed var(--color-divider)",
+              display: "grid", placeItems: "center", fontSize: 14,
+              background: !ACCENT_PRESETS.some((p) => p.hex === accent.toLowerCase()) ? accent : "transparent",
+            }}
+          >
+            <span style={{ pointerEvents: "none" }}>
+              {!ACCENT_PRESETS.some((p) => p.hex === accent.toLowerCase()) ? "" : "🎨"}
+            </span>
+            <input
+              type="color"
+              value={accent}
+              onChange={(e) => {
+                setAccent(e.target.value);
+                setAccentPref(e.target.value);
+              }}
+              style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer" }}
+            />
+          </label>
+        </div>
+        <div className="muted" style={{ fontSize: 11 }}>
+          Ilova rangi — tugmalar, sarlavhalar va yorliqlar shu rangga moslashadi.
         </div>
       </Blueprint>
 

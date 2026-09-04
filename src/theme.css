@@ -3,21 +3,28 @@
    (see telegram.js). */
 
 :root {
+  /* user-customizable brand color (Profil → Rang). Everything else in the
+     accent ramp is derived from it with color-mix() so any hue stays legible
+     in both themes without hand-tuning a palette per color. */
+  --user-accent: #17874a;
+  --tint-to: #ffffff; /* what the lighter ramp steps (100..400) mix toward */
+  --shade-to: #000000; /* what the darker ramp steps (600..900) mix toward */
+
   --color-bg: #fbfcfb;
   --color-surface: #ffffff;
   --color-text: #1d1f20;
   --color-divider: color-mix(in srgb, #1d1f20 16%, transparent);
 
-  --color-accent: #17874a;
-  --color-accent-100: #e8f4ec;
-  --color-accent-200: #cbe6d6;
-  --color-accent-300: #a3d3b8;
-  --color-accent-400: #5fb082;
-  --color-accent-500: #17874a;
-  --color-accent-600: #14743f;
-  --color-accent-700: #0f5c32;
-  --color-accent-800: #0a4325;
-  --color-accent-900: #072e19;
+  --color-accent: var(--user-accent);
+  --color-accent-100: color-mix(in srgb, var(--user-accent) 14%, var(--tint-to));
+  --color-accent-200: color-mix(in srgb, var(--user-accent) 26%, var(--tint-to));
+  --color-accent-300: color-mix(in srgb, var(--user-accent) 45%, var(--tint-to));
+  --color-accent-400: color-mix(in srgb, var(--user-accent) 68%, var(--tint-to));
+  --color-accent-500: var(--user-accent);
+  --color-accent-600: color-mix(in srgb, var(--user-accent) 85%, var(--shade-to));
+  --color-accent-700: color-mix(in srgb, var(--user-accent) 68%, var(--shade-to));
+  --color-accent-800: color-mix(in srgb, var(--user-accent) 52%, var(--shade-to));
+  --color-accent-900: color-mix(in srgb, var(--user-accent) 36%, var(--shade-to));
 
   --color-neutral-100: #f5f5f8;
   --color-neutral-200: #e7e7ea;
@@ -35,11 +42,11 @@
   --danger: #a3302a;
   --danger-bg: #fdeceb;
 
-  /* semantic surfaces that must stay dark-green in BOTH themes */
-  --nav-bg: #072e19;
+  /* semantic surfaces that must stay dark regardless of theme/accent choice */
+  --nav-bg: color-mix(in srgb, var(--user-accent) 36%, black);
   --nav-fg: #ffffff;
-  --nav-fg-dim: #a3d3b8;
-  --table-head-bg: #072e19;
+  --nav-fg-dim: color-mix(in srgb, var(--user-accent) 55%, white);
+  --table-head-bg: var(--nav-bg);
   --table-head-fg: #ffffff;
 
   --font-heading: "Barlow Condensed", system-ui, "Segoe UI", sans-serif;
@@ -62,25 +69,20 @@
 
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --bottomnav-h: 58px;
 }
 
+/* Dark mode: just flip which side the ramp mixes toward — the whole accent
+   ramp above recomputes for any --user-accent without a hand-tuned palette. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
+    --tint-to: #000000;
+    --shade-to: #ffffff;
+
     --color-bg: #121613;
     --color-surface: #1a211c;
     --color-text: #e8efe9;
     --color-divider: color-mix(in srgb, #e8efe9 16%, transparent);
-
-    /* green ramp inverted: 100 = darkest (fills), 900 = lightest (ink) */
-    --color-accent-100: #16241c;
-    --color-accent-200: #203329;
-    --color-accent-300: #2c4a3a;
-    --color-accent-400: #3d6b52;
-    --color-accent-500: #17874a;
-    --color-accent-600: #4fae7e;
-    --color-accent-700: #83c9a3;
-    --color-accent-800: #a6d9bd;
-    --color-accent-900: #cdead9;
 
     --color-neutral-700: #a9adac;
     --color-neutral-800: #c6c9c8;
@@ -97,20 +99,13 @@
   }
 }
 :root[data-theme="dark"] {
+  --tint-to: #000000;
+  --shade-to: #ffffff;
+
   --color-bg: #121613;
   --color-surface: #1a211c;
   --color-text: #e8efe9;
   --color-divider: color-mix(in srgb, #e8efe9 16%, transparent);
-
-  --color-accent-100: #16241c;
-  --color-accent-200: #203329;
-  --color-accent-300: #2c4a3a;
-  --color-accent-400: #3d6b52;
-  --color-accent-500: #17874a;
-  --color-accent-600: #4fae7e;
-  --color-accent-700: #83c9a3;
-  --color-accent-800: #a6d9bd;
-  --color-accent-900: #cdead9;
 
   --color-neutral-700: #a9adac;
   --color-neutral-800: #c6c9c8;
@@ -135,9 +130,18 @@
 }
 
 html,
-body,
+body {
+  height: 100%;
+  overscroll-behavior-y: none;
+}
+
+/* #root is the only element allowed to size to the viewport; everything that
+   scrolls does so INSIDE it (.tb-scroll) so the header/nav chrome around it
+   never gets carried off-screen by a page-level scroll. */
 #root {
   height: 100%;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 body {
@@ -411,11 +415,13 @@ textarea.input {
   left: 50%;
   bottom: calc(28px + var(--safe-bottom));
   transform: translateX(-50%);
-  background: var(--color-accent-900);
-  color: #fff;
+  background: var(--nav-bg);
+  color: var(--nav-fg);
   padding: var(--space-3) var(--space-6);
   font-size: 13px;
   z-index: 60;
+  max-width: calc(100vw - 32px);
+  text-align: center;
 }
 
 .spin {
