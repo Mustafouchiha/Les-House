@@ -128,31 +128,9 @@ export default function Shell({ page, setPage, title, kicker, children }) {
                 {title}
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
-              <span style={{ fontSize: 11, letterSpacing: ".12em", color: "var(--color-accent-700)" }}>
-                {isTelegram ? "TELEGRAM" : "WEB"}
-              </span>
-              <button
-                onClick={() => setPage("profil")}
-                title="Profil"
-                aria-label="Profil"
-                data-active={page === "profil"}
-                style={{
-                  width: 34, height: 34, flex: "none", cursor: "pointer",
-                  borderRadius: "50%", overflow: "hidden", padding: 0,
-                  border: "1px solid var(--color-accent-400)",
-                  background: page === "profil" ? "var(--color-accent)" : "var(--color-accent-100)",
-                  color: page === "profil" ? "#fff" : "var(--color-accent-800)",
-                  fontFamily: "var(--font-heading)", fontSize: 13, textTransform: "uppercase",
-                }}
-              >
-                {me?.photoUrl ? (
-                  <img src={me.photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                ) : (
-                  ((me?.firstName || "?")[0] || "") + ((me?.lastName || "")[0] || "")
-                )}
-              </button>
-            </div>
+            <span style={{ fontSize: 11, letterSpacing: ".12em", color: "var(--color-accent-700)" }}>
+              {isTelegram ? "TELEGRAM" : "WEB"}
+            </span>
           </header>
 
           <main className="tb-scroll scroll">{children}</main>
