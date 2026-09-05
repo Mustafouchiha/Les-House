@@ -122,10 +122,32 @@ export default function Shell({ page, setPage, title, kicker, children }) {
         {/* main column */}
         <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: "flex", flexDirection: "column" }}>
           <header className="tb-topbar">
-            <div>
-              <div className="kicker">{kicker}</div>
-              <div style={{ fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 24, textTransform: "uppercase", letterSpacing: ".02em", color: "var(--color-accent-900)" }}>
-                {title}
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
+              <button
+                onClick={() => setPage("profil")}
+                title="Profil"
+                aria-label="Profil"
+                data-active={page === "profil"}
+                style={{
+                  width: 34, height: 34, flex: "none", cursor: "pointer",
+                  borderRadius: "50%", overflow: "hidden", padding: 0,
+                  border: "1px solid var(--color-accent-400)",
+                  background: page === "profil" ? "var(--color-accent)" : "var(--color-accent-100)",
+                  color: page === "profil" ? "#fff" : "var(--color-accent-800)",
+                  fontFamily: "var(--font-heading)", fontSize: 13, textTransform: "uppercase",
+                }}
+              >
+                {me?.photoUrl ? (
+                  <img src={me.photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  ((me?.firstName || "?")[0] || "") + ((me?.lastName || "")[0] || "")
+                )}
+              </button>
+              <div>
+                <div className="kicker">{kicker}</div>
+                <div style={{ fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 24, textTransform: "uppercase", letterSpacing: ".02em", color: "var(--color-accent-900)" }}>
+                  {title}
+                </div>
               </div>
             </div>
             <span style={{ fontSize: 11, letterSpacing: ".12em", color: "var(--color-accent-700)" }}>

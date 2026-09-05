@@ -5,6 +5,7 @@ import { Loader } from "./components/ui.jsx";
 import Shell from "./components/Shell.jsx";
 
 import Login from "./pages/Login.jsx";
+import WebLogin from "./pages/WebLogin.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Savdo from "./pages/Savdo.jsx";
 import Ombor from "./pages/Ombor.jsx";
@@ -50,6 +51,8 @@ function Shelled() {
   }, [me, page, home]);
 
   if (status === "loading") return <Loader label="Telegram hisobi tekshirilmoqda…" />;
+
+  if (status === "web-login") return <WebLogin />;
 
   if (status === "error") {
     return (

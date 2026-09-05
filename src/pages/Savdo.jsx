@@ -219,6 +219,12 @@ function CartLine({ l, cart, me }) {
         />
       </div>
 
+      {l.mode === "total" && (
+        <div className="muted" style={{ fontSize: 11 }}>
+          = {qtyFmt(l.qty, unit)} × {fmt(l.price)} so'm
+        </div>
+      )}
+
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
         <PriceDot price={l.price} minPrice={l.minPrice} startPrice={l.startPrice} />
         <span style={{ color: remaining != null && remaining < 0 ? "var(--danger)" : "var(--color-neutral-700)" }}>

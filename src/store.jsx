@@ -80,12 +80,27 @@ export function AuthProvider({ children }) {
         }
       }
       const initData = getInitData();
-      const body = initData
-        ? { initData }
-        : { devUser: pickDevUser() };
-      const { token } = await api.post("/auth/telegram", body);
-      setToken(token);
-      await loadMe();
+      if (initData) {
+        const { token } = await api.post("/auth/telegram", { initData });
+        setToken(token);
+        await loadMe();
+        return;
+      }
+      if (!isTelegram) {
+        // Dev convenience: try the mock-user login once. In production the
+        // backend rejects this (AUTH_DEV_MODE off) and we fall through to
+        // the phone+code web login below instead of a bare error screen.
+        try {
+          const { token } = await api.post("/auth/telegram", { devUser: pickDevUser() });
+          setToken(token);
+          await loadMe();
+          return;
+        } catch {
+          setState({ status: "web-login", me: null, error: null });
+          return;
+        }
+      }
+      setState({ status: "error", me: null, error: new Error("Telegram ma'lumotlari topilmadi") });
     } catch (e) {
       setState({ status: "error", me: null, error: e });
     }
@@ -103,6 +118,15 @@ export function AuthProvider({ children }) {
     [loadMe]
   );
 
+  // completes the phone+code web login (see pages/WebLogin.jsx)
+  const completeWebLogin = useCallback(
+    async (token) => {
+      setToken(token);
+      await loadMe();
+    },
+    [loadMe]
+  );
+
   const logout = useCallback(() => {
     setToken(null);
     setState({ status: "loading", me: null, error: null });
@@ -110,8 +134,8 @@ export function AuthProvider({ children }) {
   }, [bootstrap]);
 
   const value = useMemo(
-    () => ({ ...state, reload: loadMe, retry: bootstrap, linkPhone, logout }),
-    [state, loadMe, bootstrap, linkPhone, logout]
+    () => ({ ...state, reload: loadMe, retry: bootstrap, linkPhone, logout, completeWebLogin }),
+    [state, loadMe, bootstrap, linkPhone, logout, completeWebLogin]
   );
 
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
