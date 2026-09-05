@@ -38,7 +38,9 @@ const DEV_USERS = [
 ];
 
 function DevBar({ me }) {
-  if (isTelegram) return null;
+  // Vite sets import.meta.env.DEV only for `npm run dev` — a production
+  // build (what Vercel serves) never renders this, even outside Telegram.
+  if (!import.meta.env.DEV || isTelegram) return null;
   return (
     <div
       style={{
@@ -90,15 +92,15 @@ export default function Shell({ page, setPage, title, kicker, children }) {
       <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
         {/* desktop sidebar */}
         <aside className="tb-sidebar">
-          <div style={{ padding: "var(--space-6)", borderBottom: "1px solid var(--color-accent-700)" }}>
-            <div style={{ fontFamily: "var(--font-heading)", fontSize: 19, letterSpacing: ".06em", textTransform: "uppercase" }}>
+          <div style={{ padding: "var(--space-6)", borderBottom: "1px solid var(--color-accent-200)" }}>
+            <div style={{ fontFamily: "var(--font-heading)", fontSize: 19, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--sidebar-fg)" }}>
               Taxta Bozor
             </div>
-            <div style={{ fontSize: 11, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--color-accent-300)" }}>
+            <div style={{ fontSize: 11, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--sidebar-fg-dim)" }}>
               {me?.roleLabel || me?.role}
             </div>
           </div>
-          <nav style={{ padding: "var(--space-4)", display: "flex", flexDirection: "column", gap: 2, overflow: "auto" }}>
+          <nav className="tb-sidebar-nav" style={{ padding: "var(--space-4)", display: "flex", flexDirection: "column", gap: 2, overflow: "auto" }}>
             {allowed.map((key, i) => (
               <button
                 key={key}
@@ -106,16 +108,16 @@ export default function Shell({ page, setPage, title, kicker, children }) {
                 className="tb-navbtn"
                 data-active={page === key}
               >
-                <span style={{ width: 18, flex: "none", fontSize: 10, color: "var(--color-accent-400)" }}>
+                <span style={{ width: 18, flex: "none", fontSize: 10, color: "var(--sidebar-fg-dim)" }}>
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <span>{LABELS[key]}</span>
               </button>
             ))}
           </nav>
-          <div style={{ marginTop: "auto", padding: "var(--space-6)", borderTop: "1px solid var(--color-accent-700)", fontSize: 12 }}>
-            <div style={{ fontWeight: 600 }}>{me?.firstName} {me?.lastName}</div>
-            <div style={{ color: "var(--color-accent-300)" }}>{me?.branchName || "Filial belgilanmagan"}</div>
+          <div style={{ marginTop: "auto", padding: "var(--space-6)", borderTop: "1px solid var(--color-accent-200)", fontSize: 12 }}>
+            <div style={{ fontWeight: 600, color: "var(--sidebar-fg)" }}>{me?.firstName} {me?.lastName}</div>
+            <div style={{ color: "var(--sidebar-fg-dim)" }}>{me?.branchName || "Filial belgilanmagan"}</div>
           </div>
         </aside>
 
@@ -195,10 +197,16 @@ export default function Shell({ page, setPage, title, kicker, children }) {
       )}
 
       <style>{`
-        .tb-sidebar{width:236px;flex:none;background:var(--nav-bg);color:var(--nav-fg);display:flex;flex-direction:column}
-        .tb-sidebar > div:first-child{border-color:rgba(255,255,255,.14)!important}
-        .tb-navbtn{display:flex;align-items:center;gap:var(--space-2);width:100%;padding:var(--space-3);border:0;cursor:pointer;text-align:left;font-family:var(--font-body);font-size:13.5px;background:transparent;color:rgba(255,255,255,.86)}
+        .tb-sidebar{width:236px;flex:none;background:var(--sidebar-bg);color:var(--sidebar-fg);display:flex;flex-direction:column;border-right:1px solid var(--color-accent-200)}
+        .tb-sidebar-nav{scrollbar-width:thin;scrollbar-color:var(--color-accent-400) transparent}
+        .tb-sidebar-nav::-webkit-scrollbar{width:6px}
+        .tb-sidebar-nav::-webkit-scrollbar-track{background:transparent}
+        .tb-sidebar-nav::-webkit-scrollbar-thumb{background:var(--color-accent-300);border-radius:999px}
+        .tb-sidebar-nav::-webkit-scrollbar-thumb:hover{background:var(--color-accent-500)}
+        .tb-navbtn{display:flex;align-items:center;gap:var(--space-2);width:100%;padding:var(--space-3);border:0;border-radius:var(--radius-md);cursor:pointer;text-align:left;font-family:var(--font-body);font-size:13.5px;background:transparent;color:var(--sidebar-fg)}
+        .tb-navbtn:hover:not([data-active="true"]){background:var(--color-accent-100)}
         .tb-navbtn[data-active="true"]{background:var(--color-accent);color:#fff;font-weight:600}
+        .tb-navbtn[data-active="true"] span{color:#fff!important}
         .tb-topbar{flex:none;display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-6);padding:calc(var(--space-6) + var(--safe-top)) var(--space-8) var(--space-6);border-bottom:1px solid var(--color-divider);position:sticky;top:0;background:var(--color-bg);z-index:10}
         .tb-scroll{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;padding:var(--space-8)}
         .tb-bottomnav{display:none}

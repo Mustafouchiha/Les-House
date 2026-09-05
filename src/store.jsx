@@ -215,14 +215,17 @@ export function CartProvider({ children }) {
     );
   }, []);
 
-  // set a line by total sum: qty = sum / price  (spec §20)
+  // Editing a line's total keeps the chosen quantity fixed and back-solves
+  // the effective per-unit price (e.g. "6 dona, lekin 90 ming'ga" ->
+  // price = 90/6 = 15). Quantity itself is still changed with the qty
+  // stepper/input, independently.
   const setLineTotal = useCallback((productId, totalStr) => {
     setLines((prev) =>
       prev.map((l) => {
         if (l.productId !== productId) return l;
         const total = parseNum(totalStr);
-        const q = l.price > 0 ? +(total / l.price).toFixed(3) : 0;
-        return { ...l, qty: q, mode: "total" };
+        const price = l.qty > 0 ? +(total / l.qty).toFixed(2) : l.price;
+        return { ...l, price, mode: "total" };
       })
     );
   }, []);
