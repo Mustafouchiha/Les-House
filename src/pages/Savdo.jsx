@@ -4,6 +4,7 @@ import { useAuth, useCart } from "../store.jsx";
 import { fmt, qty as qtyFmt, UNIT_LABEL, parseNum, AVAILABILITY_LABEL } from "../lib/format.js";
 import { Blueprint, Corners, Toast, Loader, PriceDot, priceHealth } from "../components/ui.jsx";
 import Receipt from "../components/Receipt.jsx";
+import SendReceipt from "../components/SendReceipt.jsx";
 import { ProductThumb } from "./Mahsulotlar.jsx";
 
 export default function Savdo() {
@@ -44,21 +45,29 @@ export default function Savdo() {
     return (
       <div style={{ maxWidth: 460, margin: "0 auto" }}>
         <Receipt sale={lastSale} />
-        <div style={{ display: "flex", gap: "var(--space-3)", marginTop: "var(--space-4)" }}>
-          <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => window.print()}>
-            Chek chiqarish
-          </button>
-          <button
-            className="btn btn-primary"
-            style={{ flex: 1 }}
-            onClick={() => {
-              cart.clear();
-              setLastSale(null);
-              setStep("cart");
-            }}
-          >
-            Yangi savdo
-          </button>
+        <div style={{ display: "grid", gap: "var(--space-3)", marginTop: "var(--space-4)" }}>
+          <SendReceipt
+            saleId={lastSale.id}
+            defaultPhone={lastSale.customerPhone || ""}
+            defaultName={lastSale.customerName || ""}
+            block
+          />
+          <div style={{ display: "flex", gap: "var(--space-3)" }}>
+            <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => window.print()}>
+              Chek chiqarish
+            </button>
+            <button
+              className="btn btn-primary"
+              style={{ flex: 1 }}
+              onClick={() => {
+                cart.clear();
+                setLastSale(null);
+                setStep("cart");
+              }}
+            >
+              Yangi savdo
+            </button>
+          </div>
         </div>
       </div>
     );
