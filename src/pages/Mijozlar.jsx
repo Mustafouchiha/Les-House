@@ -382,8 +382,10 @@ function AppUsers() {
   const filtered = items.filter((u) => !q || `${u.name} ${u.username || ""} ${u.phone || ""}`.toLowerCase().includes(q.toLowerCase()));
 
   async function patch(u, body, msg) {
+    // optimistic: reflect the change now, the DB round-trip (Neon) can lag ~1-2s
+    setItems((list) => list.map((x) => (x.id === u.id ? { ...x, ...body } : x)));
     try { await api.patch(`/users/${u.id}`, body); flash(msg || "Yangilandi"); load(); }
-    catch (e) { flash(e.message); }
+    catch (e) { flash(e.message); load(); }
   }
 
   async function confirmDelete() {
@@ -391,6 +393,7 @@ function AppUsers() {
     try {
       const r = await api.del(`/users/${deleting.id}`);
       flash(r.outcome === "deleted" ? "Akkaunt o'chirildi" : "Tarix bor — akkaunt bloklandi");
+      if (r.outcome === "deleted") setItems((list) => list.filter((x) => x.id !== deleting.id));
       setDeleting(null);
       load();
     } catch (e) { flash(e.message); } finally { setBusy(false); }
