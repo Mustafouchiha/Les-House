@@ -198,10 +198,13 @@ export function CartProvider({ children }) {
           name: p.name,
           unit: p.unit,
           price: p.sellPrice ?? p.startPrice ?? 0,
+          baseSell: p.sellPrice ?? p.startPrice ?? 0,
           minPrice: p.minPrice ?? null,
           startPrice: p.startPrice ?? null,
           cost: p.cost ?? null,
           stockLeft: p.stockLeft ?? null,
+          lengthMm: p.length ?? null,
+          cut: null, // {cutM, markupPct} when cutting to length
           qty: addQty ?? (p.unit === "M3" ? 1 : 10),
           mode: "qty",
         },
@@ -249,6 +252,28 @@ export function CartProvider({ children }) {
     );
   }, []);
 
+  // Cut-to-length: price = (cutM / totalM) * baseSell * (1 + markup%). qty is
+  // locked to 1 (one piece is cut). Passing null turns cutting back off.
+  const setCut = useCallback((productId, patch) => {
+    setLines((prev) =>
+      prev.map((l) => {
+        if (l.productId !== productId) return l;
+        if (patch === null) {
+          return { ...l, cut: null, price: l.baseSell, qty: l.unit === "M3" ? 1 : 10, mode: "qty" };
+        }
+        const cut = { cutM: "", markupPct: "", ...(l.cut || {}), ...patch };
+        const totalM = (l.lengthMm || 0) / 1000;
+        const cM = parseNum(cut.cutM);
+        const mk = parseNum(cut.markupPct);
+        const price =
+          totalM > 0 && cM > 0
+            ? Math.round((cM / totalM) * l.baseSell * (1 + mk / 100))
+            : l.baseSell;
+        return { ...l, cut, qty: 1, mode: "qty", price };
+      })
+    );
+  }, []);
+
   const remove = useCallback(
     (productId) => setLines((prev) => prev.filter((l) => l.productId !== productId)),
     []
@@ -270,6 +295,7 @@ export function CartProvider({ children }) {
       setLineTotal,
       setFinalTotal,
       setPrice,
+      setCut,
       remove,
       clear,
       discount,
@@ -287,6 +313,7 @@ export function CartProvider({ children }) {
       setLineTotal,
       setFinalTotal,
       setPrice,
+      setCut,
       remove,
       clear,
       discount,

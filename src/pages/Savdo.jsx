@@ -182,6 +182,14 @@ function CartLine({ l, cart, me }) {
   const h = priceHealth(l.price, l.minPrice, l.startPrice);
   const remaining = l.stockLeft != null ? l.stockLeft - l.qty : null;
   const step = l.unit === "M3" ? 0.5 : 5;
+
+  const canCut = (l.lengthMm || 0) > 0;
+  const cutting = !!l.cut;
+  const totalM = (l.lengthMm || 0) / 1000;
+  const cutM = cutting ? parseNum(l.cut.cutM) : 0;
+  const remM = totalM > 0 && cutM > 0 ? +(totalM - cutM).toFixed(3) : null;
+  const cutValid = cutM > 0 && cutM < totalM && remM != null && remM >= 1;
+
   return (
     <div style={{ padding: "var(--space-3) 0", borderBottom: "1px solid var(--color-accent-200)", display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
@@ -194,55 +202,103 @@ function CartLine({ l, cart, me }) {
         </button>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
-        <button className="btn btn-icon" onClick={() => cart.update(l.productId, { qty: Math.max(0, +(l.qty - step).toFixed(3)) })}>
-          −
-        </button>
-        <input
-          className="input"
-          style={{ width: 78, textAlign: "center" }}
-          value={String(l.qty).replace(".", ",")}
-          onChange={(e) => cart.update(l.productId, { qty: parseNum(e.target.value), mode: "qty" })}
-        />
-        <span style={{ fontSize: 12 }}>{unit}</span>
-        <button className="btn btn-icon" onClick={() => cart.update(l.productId, { qty: +(l.qty + step).toFixed(3) })}>
-          +
-        </button>
-      </div>
+      {canCut && (
+        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+          <input type="checkbox" checked={cutting} onChange={(e) => cart.setCut(l.productId, e.target.checked ? {} : null)} />
+          Kesib sotish ({totalM} m dona)
+        </label>
+      )}
 
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
-        <label style={{ fontSize: 11, color: "var(--color-accent-800)" }}>Narx</label>
-        <input
-          className="input"
-          style={{ width: 110 }}
-          value={String(l.price)}
-          onChange={(e) => cart.setPrice(l.productId, e.target.value)}
-        />
-        <label style={{ fontSize: 11, color: "var(--color-accent-800)" }}>Jami</label>
-        <input
-          className="input"
-          style={{ width: 120 }}
-          value={l.mode === "total" ? Math.round(l.price * l.qty) : ""}
-          placeholder={fmt(l.price * l.qty)}
-          onChange={(e) => cart.setLineTotal(l.productId, e.target.value)}
-        />
-      </div>
+      {!cutting && (
+        <>
+          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+            <button className="btn btn-icon" onClick={() => cart.update(l.productId, { qty: Math.max(0, +(l.qty - step).toFixed(3)) })}>
+              −
+            </button>
+            <input
+              className="input"
+              style={{ width: 78, textAlign: "center" }}
+              value={String(l.qty).replace(".", ",")}
+              onChange={(e) => cart.update(l.productId, { qty: parseNum(e.target.value), mode: "qty" })}
+            />
+            <span style={{ fontSize: 12 }}>{unit}</span>
+            <button className="btn btn-icon" onClick={() => cart.update(l.productId, { qty: +(l.qty + step).toFixed(3) })}>
+              +
+            </button>
+          </div>
 
-      {l.mode === "total" && (
-        <div className="muted" style={{ fontSize: 11 }}>
-          = {qtyFmt(l.qty, unit)} × {fmt(l.price)} so'm
+          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+            <label style={{ fontSize: 11, color: "var(--color-accent-800)" }}>Narx</label>
+            <input
+              className="input"
+              style={{ width: 110 }}
+              value={String(l.price)}
+              onChange={(e) => cart.setPrice(l.productId, e.target.value)}
+            />
+            <label style={{ fontSize: 11, color: "var(--color-accent-800)" }}>Jami</label>
+            <input
+              className="input"
+              style={{ width: 120 }}
+              value={l.mode === "total" ? Math.round(l.price * l.qty) : ""}
+              placeholder={fmt(l.price * l.qty)}
+              onChange={(e) => cart.setLineTotal(l.productId, e.target.value)}
+            />
+          </div>
+
+          {l.mode === "total" && (
+            <div className="muted" style={{ fontSize: 11 }}>
+              = {qtyFmt(l.qty, unit)} × {fmt(l.price)} so'm
+            </div>
+          )}
+        </>
+      )}
+
+      {cutting && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)", background: "var(--color-accent-100)", padding: "var(--space-2)" }}>
+          <div style={{ display: "flex", gap: "var(--space-2)" }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: 11, color: "var(--color-accent-800)" }}>Kesiladigan uzunlik (m)</label>
+              <input
+                className="input"
+                inputMode="decimal"
+                placeholder="Masalan: 3.3"
+                value={l.cut.cutM}
+                onChange={(e) => cart.setCut(l.productId, { cutM: e.target.value })}
+              />
+            </div>
+            <div style={{ width: 96 }}>
+              <label style={{ fontSize: 11, color: "var(--color-accent-800)" }}>Ustama %</label>
+              <input
+                className="input"
+                inputMode="decimal"
+                placeholder="10-20"
+                value={l.cut.markupPct}
+                onChange={(e) => cart.setCut(l.productId, { markupPct: e.target.value })}
+              />
+            </div>
+          </div>
+          <div style={{ fontSize: 12, fontWeight: 600 }}>Narx: {fmt(l.price)} so'm</div>
+          {remM != null && (
+            <div style={{ fontSize: 11, color: cutValid ? "var(--color-accent-800)" : "var(--danger)" }}>
+              {cutValid
+                ? `Qoldiq ${remM} m → yangi mahsulot bo'lib qo'shiladi (+10%)`
+                : `Qoldiq ${remM} m — kamida 1 m qolishi kerak, kesib bo'lmaydi`}
+            </div>
+          )}
         </div>
       )}
 
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
-        <PriceDot price={l.price} minPrice={l.minPrice} startPrice={l.startPrice} />
-        <span style={{ color: remaining != null && remaining < 0 ? "var(--danger)" : "var(--color-neutral-700)" }}>
-          {l.stockLeft != null
-            ? `omborda ${qtyFmt(l.stockLeft, unit)} · qoladi ${qtyFmt(remaining, unit)}`
-            : ""}
-        </span>
-      </div>
-      {h.blocked && (
+      {!cutting && (
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
+          <PriceDot price={l.price} minPrice={l.minPrice} startPrice={l.startPrice} />
+          <span style={{ color: remaining != null && remaining < 0 ? "var(--danger)" : "var(--color-neutral-700)" }}>
+            {l.stockLeft != null
+              ? `omborda ${qtyFmt(l.stockLeft, unit)} · qoladi ${qtyFmt(remaining, unit)}`
+              : ""}
+          </span>
+        </div>
+      )}
+      {!cutting && h.blocked && (
         <div style={{ fontSize: 11, color: "var(--danger)" }}>
           Minimal narxdan past{canOverride ? " — admin sifatida tasdiqlash mumkin" : " — savdo bloklanadi"}
         </div>
@@ -365,6 +421,9 @@ function PayStep({ cart, onBack, onDone, flash, toast }) {
           productId: l.productId,
           quantity: l.qty,
           unitPrice: l.price,
+          ...(l.cut && parseNum(l.cut.cutM) > 0
+            ? { cut: { cutLengthM: parseNum(l.cut.cutM), markupPct: parseNum(l.cut.markupPct) || 0 } }
+            : {}),
         })),
         payments,
       });
