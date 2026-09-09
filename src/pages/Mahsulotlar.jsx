@@ -45,7 +45,7 @@ export default function Mahsulotlar() {
   return (
     <div style={{ display: "grid", gap: "var(--space-4)" }}>
       <div style={{ display: "flex", gap: "var(--space-3)" }}>
-        <input className="input" placeholder="Nomi, material, o'lcham" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input className="input" placeholder="Nomi, material, o'lcham bo'yicha qidiring" value={q} onChange={(e) => setQ(e.target.value)} />
         {canEdit && (
           <button className="btn btn-secondary" style={{ flex: "none" }} onClick={() => setEditing({})}>
             + Yangi mahsulot
@@ -185,15 +185,21 @@ function fileToDataUrl(file, maxDim = 1000, quality = 0.82) {
   });
 }
 
+const DIM_UNITS = ["mm", "sm", "dm", "m"];
+const TO_MM = { mm: 1, sm: 10, dm: 100, m: 1000 };
+const STEPS = ["Asosiy", "O'lcham", "Narx", "Qo'shimcha"];
+
 const EMPTY_FORM = {
   name: "", categoryId: "", material: "", woodType: "", quality: "",
-  unit: "PIECE", dimX: "", dimY: "", length: "", dimUnit: "mm",
+  unit: "PIECE",
+  dimX: "", dimXUnit: "mm", dimY: "", dimYUnit: "mm", length: "", lengthUnit: "mm",
   sellPrice: "", minPrice: "", startPrice: "", cost: "",
   minStock: "", rating: "", note: "",
 };
 
 function ProductEditor({ product, categories, onClose, onSaved }) {
   const isNew = !product.id;
+  const [step, setStep] = useState(0);
   const [f, setF] = useState(() => ({
     ...EMPTY_FORM,
     ...(isNew
@@ -239,20 +245,22 @@ function ProductEditor({ product, categories, onClose, onSaved }) {
 
   async function save() {
     if (!f.name.trim()) {
-      setErr("Nomi kiritilishi shart");
+      setErr("Mahsulot nomini kiriting");
+      setStep(0);
       return;
     }
-    const negDim = ["dimX", "dimY", "length"].some((k) => f[k] !== "" && Number(f[k]) < 0);
-    if (negDim) {
+    const dimKeys = [["dimX", "dimXUnit"], ["dimY", "dimYUnit"], ["length", "lengthUnit"]];
+    if (dimKeys.some(([k]) => f[k] !== "" && Number(f[k]) < 0)) {
       setErr("O'lchamlar manfiy bo'lishi mumkin emas");
+      setStep(1);
       return;
     }
     setBusy(true);
     setErr(null);
     const num = (v) => (v === "" || v == null ? undefined : Number(v));
-    // dimensions are stored in mm; convert from the chosen entry unit
-    const toMm = { mm: 1, sm: 10, dm: 100, m: 1000 }[f.dimUnit] || 1;
-    const dim = (v) => (num(v) == null ? null : +(num(v) * toMm).toFixed(2));
+    // dimensions are stored in mm; convert from each field's chosen entry unit
+    const dim = (k, uk) => (num(f[k]) == null ? null : +(num(f[k]) * (TO_MM[f[uk]] || 1)).toFixed(2));
+    const sell = num(f.sellPrice) ?? 0;
     const payload = {
       name: f.name.trim(),
       categoryId: f.categoryId || null,
@@ -260,12 +268,12 @@ function ProductEditor({ product, categories, onClose, onSaved }) {
       woodType: f.woodType || null,
       quality: f.quality || null,
       unit: f.unit,
-      dimX: dim(f.dimX),
-      dimY: dim(f.dimY),
-      length: dim(f.length),
-      sellPrice: num(f.sellPrice) ?? 0,
+      dimX: dim("dimX", "dimXUnit"),
+      dimY: dim("dimY", "dimYUnit"),
+      length: dim("length", "lengthUnit"),
+      sellPrice: sell,
       minPrice: num(f.minPrice) ?? 0,
-      startPrice: num(f.startPrice) ?? 0,
+      startPrice: f.startPrice === "" ? sell : (num(f.startPrice) ?? sell),
       cost: num(f.cost) ?? 0,
       minStock: num(f.minStock) ?? 0,
       rating: f.rating === "" ? null : num(f.rating),
@@ -290,139 +298,178 @@ function ProductEditor({ product, categories, onClose, onSaved }) {
       actions={
         <>
           <button className="btn btn-secondary" onClick={onClose} disabled={busy}>Bekor</button>
-          <button className="btn btn-primary" onClick={save} disabled={busy}>
-            {busy ? "Saqlanmoqda…" : "Saqlash"}
-          </button>
+          {step > 0 && (
+            <button className="btn btn-secondary" onClick={() => setStep(step - 1)} disabled={busy}>
+              Oldingi
+            </button>
+          )}
+          {step < STEPS.length - 1 ? (
+            <button className="btn btn-primary" onClick={() => setStep(step + 1)}>Keyingi</button>
+          ) : (
+            <button className="btn btn-primary" onClick={save} disabled={busy}>
+              {busy ? "Saqlanmoqda…" : "Saqlash"}
+            </button>
+          )}
         </>
       }
     >
-      <div style={{ display: "grid", gap: "var(--space-3)", maxHeight: "60vh", overflow: "auto", paddingRight: 4 }}>
-        <div className="field">
-          <label>Nomi *</label>
-          <input className="input" value={f.name} onChange={set("name")} placeholder="Masalan: Brus 100×100×4000" />
-        </div>
+      <div className="seg" style={{ flexWrap: "wrap", marginBottom: "var(--space-3)" }}>
+        {STEPS.map((s, i) => (
+          <button key={s} className={`seg-opt${step === i ? " on" : ""}`} onClick={() => setStep(i)}>
+            {i + 1}. {s}
+          </button>
+        ))}
+      </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-3)" }}>
-          <div className="field">
-            <label>Kategoriya</label>
-            <select className="input" value={f.categoryId} onChange={set("categoryId")}>
-              <option value="">— tanlanmagan —</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label>O'lchov birligi</label>
-            <select className="input" value={f.unit} onChange={set("unit")}>
-              {UNITS.map((u) => (
-                <option key={u} value={u}>{UNIT_LABEL[u]}</option>
-              ))}
-            </select>
-          </div>
-        </div>
+      <div style={{ display: "grid", gap: "var(--space-3)", maxHeight: "50vh", overflow: "auto", paddingRight: 4 }}>
+        {step === 0 && (
+          <>
+            <div className="field">
+              <label>Nomi *</label>
+              <input className="input" value={f.name} onChange={set("name")} placeholder="Mahsulot nomini kiriting" />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-3)" }}>
+              <div className="field">
+                <label>Kategoriya</label>
+                <select className="input" value={f.categoryId} onChange={set("categoryId")}>
+                  <option value="">— tanlanmagan —</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label>O'lchov birligi</label>
+                <select className="input" value={f.unit} onChange={set("unit")}>
+                  {UNITS.map((u) => (
+                    <option key={u} value={u}>{UNIT_LABEL[u]}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-3)" }}>
+              <div className="field">
+                <label>Material</label>
+                <input className="input" value={f.material} onChange={set("material")} placeholder="Masalan: Sasna, Archa" />
+              </div>
+              <div className="field">
+                <label>Sifat</label>
+                <input className="input" value={f.quality} onChange={set("quality")} placeholder="Masalan: 1-sort, Premium" />
+              </div>
+            </div>
+          </>
+        )}
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-3)" }}>
-          <div className="field">
-            <label>Material</label>
-            <input className="input" value={f.material} onChange={set("material")} />
-          </div>
-          <div className="field">
-            <label>Sifat</label>
-            <input className="input" value={f.quality} onChange={set("quality")} placeholder="1-sort, Premium…" />
-          </div>
-        </div>
+        {step === 1 && (
+          <>
+            <div className="muted" style={{ fontSize: 12 }}>
+              Har bir o'lcham uchun birlikni alohida tanlang. Bazada mm da saqlanadi.
+            </div>
+            {[
+              ["dimX", "dimXUnit", "Qalinlik", "Masalan: 25"],
+              ["dimY", "dimYUnit", "Eni", "Masalan: 150"],
+              ["length", "lengthUnit", "Uzunlik", "Masalan: 3000"],
+            ].map(([k, uk, label, ph]) => (
+              <div className="field" key={k}>
+                <label>{label}</label>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 84px", gap: "var(--space-2)" }}>
+                  <input className="input" type="number" min="0" step="any" value={f[k]} onChange={set(k)} placeholder={ph} />
+                  <select className="input" value={f[uk]} onChange={set(uk)}>
+                    {DIM_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                  </select>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
 
-        <div className="field">
-          <label>O'lcham — qalinlik × eni × uzunlik</label>
-          <div style={{ display: "grid", gridTemplateColumns: "72px repeat(3,1fr)", gap: "var(--space-2)" }}>
-            <select className="input" value={f.dimUnit} onChange={set("dimUnit")}>
-              {["mm", "sm", "dm", "m"].map((u) => <option key={u} value={u}>{u}</option>)}
-            </select>
-            <input className="input" type="number" min="0" step="any" value={f.dimX} onChange={set("dimX")} placeholder="qalinlik" />
-            <input className="input" type="number" min="0" step="any" value={f.dimY} onChange={set("dimY")} placeholder="eni" />
-            <input className="input" type="number" min="0" step="any" value={f.length} onChange={set("length")} placeholder="uzunlik" />
-          </div>
-          <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
-            Birlikni tanlang, kerakli kataklarni to'ldiring. Bazada mm da saqlanadi.
-          </div>
-        </div>
+        {step === 2 && (
+          <>
+            <div className="field">
+              <label>Sotish narxi *</label>
+              <input className="input" inputMode="decimal" value={f.sellPrice} onChange={set("sellPrice")} placeholder="Sotish narxini kiriting (so'm)" />
+            </div>
+            <div className="field">
+              <label>Tannarx</label>
+              <input className="input" inputMode="decimal" value={f.cost} onChange={set("cost")} placeholder="Tannarxni kiriting (so'm)" />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-3)" }}>
+              <div className="field">
+                <label>Eng past narx</label>
+                <input className="input" inputMode="decimal" value={f.minPrice} onChange={set("minPrice")} placeholder="Chegirmada tushmaydi (so'm)" />
+              </div>
+              <div className="field">
+                <label>Minimal qoldiq</label>
+                <input className="input" inputMode="decimal" value={f.minStock} onChange={set("minStock")} placeholder="Masalan: 10" />
+              </div>
+            </div>
+            <div className="muted" style={{ fontSize: 11 }}>
+              "Eng past narx" — sotuvchi shundan pastga tusha olmaydi. Bo'sh qoldirilsa 0.
+            </div>
+          </>
+        )}
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-3)" }}>
-          <div className="field">
-            <label>Sotish narxi</label>
-            <input className="input" value={f.sellPrice} onChange={set("sellPrice")} placeholder="0" />
-          </div>
-          <div className="field">
-            <label>Boshlang'ich narx</label>
-            <input className="input" value={f.startPrice} onChange={set("startPrice")} placeholder="0" />
-          </div>
-          <div className="field">
-            <label>Minimal narx</label>
-            <input className="input" value={f.minPrice} onChange={set("minPrice")} placeholder="0" />
-          </div>
-          <div className="field">
-            <label>Tannarx</label>
-            <input className="input" value={f.cost} onChange={set("cost")} placeholder="0" />
-          </div>
-          <div className="field">
-            <label>Minimal qoldiq</label>
-            <input className="input" value={f.minStock} onChange={set("minStock")} placeholder="0" />
-          </div>
-          <div className="field">
-            <label>Reyting (0–5)</label>
-            <input className="input" value={f.rating} onChange={set("rating")} placeholder="4.5" />
-          </div>
-        </div>
-
-        <div className="field">
-          <label>Izoh</label>
-          <textarea className="input" value={f.note} onChange={set("note")} />
-        </div>
-
-        <div className="field">
-          <label>Rasmlar (galereyadan, ko'pi bilan 4 ta)</label>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "var(--space-2)" }}>
-            {images.map((img, i) => (
-              <label
-                key={i}
-                style={{
-                  aspectRatio: "1", position: "relative", cursor: "pointer",
-                  border: "1px dashed var(--color-accent-400)", overflow: "hidden",
-                  display: "grid", placeItems: "center", background: "var(--color-accent-100)",
-                }}
-              >
-                {img ? (
-                  <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                ) : (
-                  <span style={{ fontSize: 22, color: "var(--color-accent-400)" }}>+</span>
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => pickImage(i, e.target.files?.[0])}
-                  style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer" }}
-                />
-                {img && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setImages((arr) => arr.map((x, idx) => (idx === i ? null : x)));
-                    }}
+        {step === 3 && (
+          <>
+            <div className="field">
+              <label>Ichki izoh <span className="muted">(faqat xodimlar ko'radi)</span></label>
+              <textarea
+                className="input"
+                rows={3}
+                value={f.note}
+                onChange={set("note")}
+                placeholder="O'zingiz uchun eslatma: yetkazib beruvchi, kelgan sana, partiya raqami…"
+              />
+            </div>
+            <div className="field">
+              <label>Reyting (0–5)</label>
+              <input className="input" inputMode="decimal" value={f.rating} onChange={set("rating")} placeholder="Masalan: 4.5" />
+            </div>
+            <div className="field">
+              <label>Rasmlar <span className="muted">(ko'pi bilan 4 ta)</span></label>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "var(--space-2)" }}>
+                {images.map((img, i) => (
+                  <label
+                    key={i}
                     style={{
-                      position: "absolute", top: 2, right: 2, width: 20, height: 20,
-                      border: 0, borderRadius: "50%", background: "rgba(0,0,0,.6)", color: "#fff",
-                      fontSize: 12, lineHeight: "20px", padding: 0, cursor: "pointer",
+                      aspectRatio: "1", position: "relative", cursor: "pointer",
+                      border: "1px dashed var(--color-accent-400)", overflow: "hidden",
+                      display: "grid", placeItems: "center", background: "var(--color-accent-100)",
                     }}
                   >
-                    ×
-                  </button>
-                )}
-              </label>
-            ))}
-          </div>
-        </div>
+                    {img ? (
+                      <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : (
+                      <span style={{ fontSize: 22, color: "var(--color-accent-400)" }}>+</span>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => pickImage(i, e.target.files?.[0])}
+                      style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer" }}
+                    />
+                    {img && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setImages((arr) => arr.map((x, idx) => (idx === i ? null : x)));
+                        }}
+                        style={{
+                          position: "absolute", top: 2, right: 2, width: 20, height: 20,
+                          border: 0, borderRadius: "50%", background: "rgba(0,0,0,.6)", color: "#fff",
+                          fontSize: 12, lineHeight: "20px", padding: 0, cursor: "pointer",
+                        }}
+                      >
+                        ×
+                      </button>
+                    )}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </div>
       {err && <div style={{ color: "var(--danger)", fontSize: 12, marginTop: 8 }}>{err}</div>}
     </Dialog>
