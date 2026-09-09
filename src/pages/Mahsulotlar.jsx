@@ -187,7 +187,8 @@ function fileToDataUrl(file, maxDim = 1000, quality = 0.82) {
 
 const EMPTY_FORM = {
   name: "", categoryId: "", material: "", woodType: "", quality: "",
-  unit: "PIECE", sellPrice: "", minPrice: "", startPrice: "", cost: "",
+  unit: "PIECE", dimX: "", dimY: "", dimZ: "", length: "",
+  sellPrice: "", minPrice: "", startPrice: "", cost: "",
   minStock: "", rating: "", note: "",
 };
 
@@ -204,6 +205,10 @@ function ProductEditor({ product, categories, onClose, onSaved }) {
           woodType: product.woodType ?? "",
           quality: product.quality ?? "",
           unit: product.unit ?? "PIECE",
+          dimX: product.dimX ?? "",
+          dimY: product.dimY ?? "",
+          dimZ: product.dimZ ?? "",
+          length: product.length ?? "",
           sellPrice: product.sellPrice ?? "",
           minPrice: product.minPrice ?? "",
           startPrice: product.startPrice ?? "",
@@ -248,6 +253,10 @@ function ProductEditor({ product, categories, onClose, onSaved }) {
       woodType: f.woodType || null,
       quality: f.quality || null,
       unit: f.unit,
+      dimX: num(f.dimX) ?? null,
+      dimY: num(f.dimY) ?? null,
+      dimZ: num(f.dimZ) ?? null,
+      length: num(f.length) ?? null,
       sellPrice: num(f.sellPrice) ?? 0,
       minPrice: num(f.minPrice) ?? 0,
       startPrice: num(f.startPrice) ?? 0,
@@ -315,6 +324,19 @@ function ProductEditor({ product, categories, onClose, onSaved }) {
           <div className="field">
             <label>Sifat</label>
             <input className="input" value={f.quality} onChange={set("quality")} placeholder="1-sort, Premium…" />
+          </div>
+        </div>
+
+        <div className="field">
+          <label>O'lchamlar (mm) — bo'yi × eni × balandligi × uzunligi</label>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "var(--space-2)" }}>
+            <input className="input" inputMode="decimal" value={f.dimX} onChange={set("dimX")} placeholder="bo'yi" />
+            <input className="input" inputMode="decimal" value={f.dimY} onChange={set("dimY")} placeholder="eni" />
+            <input className="input" inputMode="decimal" value={f.dimZ} onChange={set("dimZ")} placeholder="balandligi" />
+            <input className="input" inputMode="decimal" value={f.length} onChange={set("length")} placeholder="uzunligi" />
+          </div>
+          <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
+            Kerak bo'lgan kataklarnigina to'ldiring. Masalan taxta: 25 × 150 × — × 3000
           </div>
         </div>
 
