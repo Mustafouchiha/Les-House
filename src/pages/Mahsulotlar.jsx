@@ -187,7 +187,7 @@ function fileToDataUrl(file, maxDim = 1000, quality = 0.82) {
 
 const EMPTY_FORM = {
   name: "", categoryId: "", material: "", woodType: "", quality: "",
-  unit: "PIECE", dimX: "", dimY: "", length: "",
+  unit: "PIECE", dimX: "", dimY: "", length: "", dimUnit: "mm",
   sellPrice: "", minPrice: "", startPrice: "", cost: "",
   minStock: "", rating: "", note: "",
 };
@@ -250,6 +250,9 @@ function ProductEditor({ product, categories, onClose, onSaved }) {
     setBusy(true);
     setErr(null);
     const num = (v) => (v === "" || v == null ? undefined : Number(v));
+    // dimensions are stored in mm; convert from the chosen entry unit
+    const toMm = { mm: 1, sm: 10, dm: 100, m: 1000 }[f.dimUnit] || 1;
+    const dim = (v) => (num(v) == null ? null : +(num(v) * toMm).toFixed(2));
     const payload = {
       name: f.name.trim(),
       categoryId: f.categoryId || null,
@@ -257,9 +260,9 @@ function ProductEditor({ product, categories, onClose, onSaved }) {
       woodType: f.woodType || null,
       quality: f.quality || null,
       unit: f.unit,
-      dimX: num(f.dimX) ?? null,
-      dimY: num(f.dimY) ?? null,
-      length: num(f.length) ?? null,
+      dimX: dim(f.dimX),
+      dimY: dim(f.dimY),
+      length: dim(f.length),
       sellPrice: num(f.sellPrice) ?? 0,
       minPrice: num(f.minPrice) ?? 0,
       startPrice: num(f.startPrice) ?? 0,
@@ -331,14 +334,17 @@ function ProductEditor({ product, categories, onClose, onSaved }) {
         </div>
 
         <div className="field">
-          <label>O'lcham (mm) — qalinlik × eni × uzunlik</label>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "var(--space-2)" }}>
+          <label>O'lcham — qalinlik × eni × uzunlik</label>
+          <div style={{ display: "grid", gridTemplateColumns: "72px repeat(3,1fr)", gap: "var(--space-2)" }}>
+            <select className="input" value={f.dimUnit} onChange={set("dimUnit")}>
+              {["mm", "sm", "dm", "m"].map((u) => <option key={u} value={u}>{u}</option>)}
+            </select>
             <input className="input" type="number" min="0" step="any" value={f.dimX} onChange={set("dimX")} placeholder="qalinlik" />
             <input className="input" type="number" min="0" step="any" value={f.dimY} onChange={set("dimY")} placeholder="eni" />
             <input className="input" type="number" min="0" step="any" value={f.length} onChange={set("length")} placeholder="uzunlik" />
           </div>
           <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
-            Kerak bo'lganini to'ldiring. Masalan taxta: 25 × 150 × 3000
+            Birlikni tanlang, kerakli kataklarni to'ldiring. Bazada mm da saqlanadi.
           </div>
         </div>
 
