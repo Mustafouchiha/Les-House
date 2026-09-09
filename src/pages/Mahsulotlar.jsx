@@ -187,7 +187,7 @@ function fileToDataUrl(file, maxDim = 1000, quality = 0.82) {
 
 const EMPTY_FORM = {
   name: "", categoryId: "", material: "", woodType: "", quality: "",
-  unit: "PIECE", dimX: "", dimY: "", dimZ: "", length: "",
+  unit: "PIECE", dimX: "", dimY: "", length: "",
   sellPrice: "", minPrice: "", startPrice: "", cost: "",
   minStock: "", rating: "", note: "",
 };
@@ -207,7 +207,6 @@ function ProductEditor({ product, categories, onClose, onSaved }) {
           unit: product.unit ?? "PIECE",
           dimX: product.dimX ?? "",
           dimY: product.dimY ?? "",
-          dimZ: product.dimZ ?? "",
           length: product.length ?? "",
           sellPrice: product.sellPrice ?? "",
           minPrice: product.minPrice ?? "",
@@ -243,6 +242,11 @@ function ProductEditor({ product, categories, onClose, onSaved }) {
       setErr("Nomi kiritilishi shart");
       return;
     }
+    const negDim = ["dimX", "dimY", "length"].some((k) => f[k] !== "" && Number(f[k]) < 0);
+    if (negDim) {
+      setErr("O'lchamlar manfiy bo'lishi mumkin emas");
+      return;
+    }
     setBusy(true);
     setErr(null);
     const num = (v) => (v === "" || v == null ? undefined : Number(v));
@@ -255,7 +259,6 @@ function ProductEditor({ product, categories, onClose, onSaved }) {
       unit: f.unit,
       dimX: num(f.dimX) ?? null,
       dimY: num(f.dimY) ?? null,
-      dimZ: num(f.dimZ) ?? null,
       length: num(f.length) ?? null,
       sellPrice: num(f.sellPrice) ?? 0,
       minPrice: num(f.minPrice) ?? 0,
@@ -328,15 +331,14 @@ function ProductEditor({ product, categories, onClose, onSaved }) {
         </div>
 
         <div className="field">
-          <label>O'lchamlar (mm) — bo'yi × eni × balandligi × uzunligi</label>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "var(--space-2)" }}>
-            <input className="input" inputMode="decimal" value={f.dimX} onChange={set("dimX")} placeholder="bo'yi" />
-            <input className="input" inputMode="decimal" value={f.dimY} onChange={set("dimY")} placeholder="eni" />
-            <input className="input" inputMode="decimal" value={f.dimZ} onChange={set("dimZ")} placeholder="balandligi" />
-            <input className="input" inputMode="decimal" value={f.length} onChange={set("length")} placeholder="uzunligi" />
+          <label>O'lcham (mm) — qalinlik × eni × uzunlik</label>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "var(--space-2)" }}>
+            <input className="input" type="number" min="0" step="any" value={f.dimX} onChange={set("dimX")} placeholder="qalinlik" />
+            <input className="input" type="number" min="0" step="any" value={f.dimY} onChange={set("dimY")} placeholder="eni" />
+            <input className="input" type="number" min="0" step="any" value={f.length} onChange={set("length")} placeholder="uzunlik" />
           </div>
           <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
-            Kerak bo'lgan kataklarnigina to'ldiring. Masalan taxta: 25 × 150 × — × 3000
+            Kerak bo'lganini to'ldiring. Masalan taxta: 25 × 150 × 3000
           </div>
         </div>
 
