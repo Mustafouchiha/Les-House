@@ -5,6 +5,7 @@ import { fmt } from "../lib/format.js";
 import { Loader, Dialog, Toast } from "../components/ui.jsx";
 import Receipt from "../components/Receipt.jsx";
 import SendReceipt from "../components/SendReceipt.jsx";
+import ReceiptPdfButton from "../components/ReceiptPdfButton.jsx";
 
 const PAY_LABEL = { CASH: "Naqd", CARD: "Karta", BANK: "Bank", DEBT: "Qarz", MIXED: "Aralash" };
 const STATUS_LABEL = { COMPLETED: "Yakunlangan", REFUNDED: "Qaytarilgan", CANCELLED: "Bekor qilingan" };
@@ -83,6 +84,7 @@ export default function Tarix() {
                 defaultPhone={open.customerPhone || ""}
                 defaultName={open.customerName || ""}
               />
+              <ReceiptPdfButton saleId={open.id} />
               <button className="btn btn-secondary" onClick={() => window.print()}>Chop etish</button>
               <button className="btn btn-primary" onClick={() => setOpen(null)}>Yopish</button>
             </>

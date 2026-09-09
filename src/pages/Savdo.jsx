@@ -5,6 +5,7 @@ import { fmt, qty as qtyFmt, UNIT_LABEL, parseNum, AVAILABILITY_LABEL } from "..
 import { Blueprint, Corners, Toast, Loader, PriceDot, priceHealth } from "../components/ui.jsx";
 import Receipt from "../components/Receipt.jsx";
 import SendReceipt from "../components/SendReceipt.jsx";
+import ReceiptPdfButton from "../components/ReceiptPdfButton.jsx";
 import { ProductThumb } from "./Mahsulotlar.jsx";
 
 export default function Savdo() {
@@ -56,6 +57,7 @@ export default function Savdo() {
             <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => window.print()}>
               Chek chiqarish
             </button>
+            <ReceiptPdfButton saleId={lastSale.id} style={{ flex: "none" }} />
             <button
               className="btn btn-primary"
               style={{ flex: 1 }}

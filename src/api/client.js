@@ -58,9 +58,23 @@ async function req(method, path, body) {
   return data;
 }
 
+async function reqBlob(path) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  let res;
+  try {
+    res = await fetch(`${BASE}/api${path}`, { headers });
+  } catch {
+    throw new ApiError(0, "network", "Serverga ulanib bo'lmadi");
+  }
+  if (!res.ok) throw new ApiError(res.status, "download", "Yuklab bo'lmadi");
+  return res.blob();
+}
+
 export const api = {
   get: (p) => req("GET", p),
   post: (p, b) => req("POST", p, b ?? {}),
   patch: (p, b) => req("PATCH", p, b ?? {}),
   del: (p, b) => req("DELETE", p, b ?? {}),
+  blob: (p) => reqBlob(p),
 };
