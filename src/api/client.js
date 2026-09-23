@@ -33,6 +33,13 @@ export class ApiError extends Error {
 }
 
 async function req(method, path, body) {
+  if (!BASE && import.meta.env.PROD) {
+    throw new ApiError(
+      0,
+      "config",
+      "VITE_API_URL sozlanmagan — frontend backendga ulana olmaydi"
+    );
+  }
   const headers = { "Content-Type": "application/json" };
   if (token) headers.Authorization = `Bearer ${token}`;
   let res;
@@ -46,12 +53,23 @@ async function req(method, path, body) {
     throw new ApiError(0, "network", "Serverga ulanib bo'lmadi");
   }
   const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
+  let data = null;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new ApiError(
+        res.status,
+        "bad_response",
+        `Server JSON emas qaytardi (HTTP ${res.status}). API URL noto'g'ri bo'lishi mumkin.`
+      );
+    }
+  }
   if (!res.ok) {
     throw new ApiError(
       res.status,
       data?.error || data?.code,
-      data?.message || res.statusText,
+      data?.message || res.statusText || `HTTP ${res.status}`,
       data?.details
     );
   }
