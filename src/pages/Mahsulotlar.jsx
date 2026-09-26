@@ -24,6 +24,14 @@ export default function Mahsulotlar() {
     api.get("/categories").then(setCats).catch(() => {});
   }, []);
 
+  // "bo'lim qo'sh" — let OPERATOR+ add a new category right from the product
+  // form instead of asking for it to be added ahead of time.
+  async function addCategory(name) {
+    const c = await api.post("/categories", { name, kind: "category" });
+    setCats((s) => ({ ...s, categories: [...s.categories, c].sort((a, b) => a.name.localeCompare(b.name)) }));
+    return c;
+  }
+
   if (!items) return <Loader />;
   const filtered = items.filter((p) => !q || p.name.toLowerCase().includes(q.toLowerCase()));
   const flash = (m) => { setToast(m); setTimeout(() => setToast(""), 2200); };
@@ -97,6 +105,7 @@ export default function Mahsulotlar() {
         <ProductEditor
           product={editing}
           categories={cats.categories}
+          onAddCategory={addCategory}
           onClose={() => setEditing(null)}
           onSaved={(isNew) => {
             setEditing(null);
@@ -134,29 +143,83 @@ export default function Mahsulotlar() {
   );
 }
 
-export function ProductThumb({ images, size = 150 }) {
-  const url = images?.[0];
-  if (!url) {
+// `size` (px) is only passed by dense grids (e.g. the POS picker) that need a
+// small fixed square and can't host click targets inside a <button> card —
+// those stay to a single image. Without `size` (catalog / edit cards) it's a
+// full-width square with prev/next + dots to flip through all 4 photos.
+export function ProductThumb({ images, size }) {
+  const list = (images || []).filter(Boolean);
+  const [i, setI] = useState(0);
+  const compact = !!size;
+  const idx = list.length ? ((i % list.length) + list.length) % list.length : 0;
+
+  const box = compact
+    ? { width: size, height: size, background: "var(--color-accent-100)", overflow: "hidden", flex: "none" }
+    : { width: "100%", aspectRatio: "1", position: "relative", background: "var(--color-accent-100)", overflow: "hidden" };
+
+  if (!list.length) {
     return (
       <div
         style={{
-          height: size, display: "grid", placeItems: "center",
-          background: "var(--color-accent-100)", color: "var(--color-accent-400)",
-          fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase",
+          ...box, display: "grid", placeItems: "center",
+          color: "var(--color-accent-400)", fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase",
         }}
       >
         Rasm yo'q
       </div>
     );
   }
+
   return (
-    <img
-      src={url}
-      alt=""
-      style={{ height: size, width: "100%", objectFit: "cover", background: "var(--color-accent-100)" }}
-      onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
-    />
+    <div style={box}>
+      <img
+        src={list[idx]}
+        alt=""
+        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
+      />
+      {!compact && list.length > 1 && (
+        <>
+          <span
+            role="button"
+            aria-label="Oldingi rasm"
+            onClick={(e) => { e.stopPropagation(); setI(idx - 1); }}
+            style={thumbNavStyle("left")}
+          >
+            ‹
+          </span>
+          <span
+            role="button"
+            aria-label="Keyingi rasm"
+            onClick={(e) => { e.stopPropagation(); setI(idx + 1); }}
+            style={thumbNavStyle("right")}
+          >
+            ›
+          </span>
+          <div style={{ position: "absolute", bottom: 4, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 4 }}>
+            {list.map((_, di) => (
+              <span
+                key={di}
+                style={{
+                  width: 5, height: 5, borderRadius: "50%",
+                  background: di === idx ? "#fff" : "rgba(255,255,255,.5)",
+                  boxShadow: "0 0 2px rgba(0,0,0,.6)",
+                }}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
   );
+}
+
+function thumbNavStyle(side) {
+  return {
+    position: "absolute", top: "50%", [side]: 2, transform: "translateY(-50%)",
+    width: 22, height: 22, borderRadius: "50%", background: "rgba(0,0,0,.45)", color: "#fff",
+    display: "grid", placeItems: "center", fontSize: 14, lineHeight: 1, cursor: "pointer", userSelect: "none",
+  };
 }
 
 // Downscale + compress a picked photo client-side so 4 images stay well
@@ -185,8 +248,8 @@ function fileToDataUrl(file, maxDim = 1000, quality = 0.82) {
   });
 }
 
-const DIM_UNITS = ["mm", "sm", "dm", "m"];
-const TO_MM = { mm: 1, sm: 10, dm: 100, m: 1000 };
+export const DIM_UNITS = ["mm", "sm", "dm", "m"];
+export const TO_MM = { mm: 1, sm: 10, dm: 100, m: 1000 };
 const STEPS = ["Asosiy", "O'lcham", "Narx", "Qo'shimcha"];
 
 const EMPTY_FORM = {
@@ -197,9 +260,10 @@ const EMPTY_FORM = {
   minStock: "", rating: "", note: "",
 };
 
-function ProductEditor({ product, categories, onClose, onSaved }) {
+function ProductEditor({ product, categories, onAddCategory, onClose, onSaved }) {
   const isNew = !product.id;
   const [step, setStep] = useState(0);
+  const [newCat, setNewCat] = useState(null); // string while the "add category" input is open
   const [f, setF] = useState(() => ({
     ...EMPTY_FORM,
     ...(isNew
@@ -331,12 +395,58 @@ function ProductEditor({ product, categories, onClose, onSaved }) {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-3)" }}>
               <div className="field">
                 <label>Kategoriya</label>
-                <select className="input" value={f.categoryId} onChange={set("categoryId")}>
+                <select
+                  className="input"
+                  value={f.categoryId}
+                  onChange={(e) => {
+                    if (e.target.value === "__new__") { setNewCat(""); return; }
+                    setF((s) => ({ ...s, categoryId: e.target.value }));
+                  }}
+                >
                   <option value="">— tanlanmagan —</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
+                  <option value="__new__">+ Yangi kategoriya qo'shish…</option>
                 </select>
+                {newCat !== null && (
+                  <div style={{ display: "flex", gap: "var(--space-2)", marginTop: 6 }}>
+                    <input
+                      className="input"
+                      autoFocus
+                      value={newCat}
+                      onChange={(e) => setNewCat(e.target.value)}
+                      placeholder="Yangi kategoriya nomi"
+                      onKeyDown={async (e) => {
+                        if (e.key !== "Enter" || !newCat.trim()) return;
+                        try {
+                          const c = await onAddCategory(newCat.trim());
+                          setF((s) => ({ ...s, categoryId: c.id }));
+                          setNewCat(null);
+                        } catch (er) {
+                          setErr(er.message);
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      disabled={!newCat.trim()}
+                      onClick={async () => {
+                        try {
+                          const c = await onAddCategory(newCat.trim());
+                          setF((s) => ({ ...s, categoryId: c.id }));
+                          setNewCat(null);
+                        } catch (er) {
+                          setErr(er.message);
+                        }
+                      }}
+                    >
+                      Qo'shish
+                    </button>
+                    <button type="button" className="btn btn-ghost" onClick={() => setNewCat(null)}>Bekor</button>
+                  </div>
+                )}
               </div>
               <div className="field">
                 <label>O'lchov birligi</label>

@@ -6,7 +6,10 @@ import { Blueprint, Corners, Toast, Loader, PriceDot, priceHealth } from "../com
 import Receipt from "../components/Receipt.jsx";
 import SendReceipt from "../components/SendReceipt.jsx";
 import ReceiptPdfButton from "../components/ReceiptPdfButton.jsx";
+import QuickAddProduct from "../components/QuickAddProduct.jsx";
 import { ProductThumb } from "./Mahsulotlar.jsx";
+
+const CAN_QUICK_ADD_ROLES = ["OPERATOR", "MANAGER", "ADMIN"];
 
 export default function Savdo() {
   const { me } = useAuth();
@@ -18,6 +21,7 @@ export default function Savdo() {
   const [cats, setCats] = useState(["Barchasi"]);
   const [toast, setToast] = useState("");
   const [lastSale, setLastSale] = useState(null);
+  const [quickAdding, setQuickAdding] = useState(false);
 
   useEffect(() => {
     api.get("/products").then((r) => {
@@ -92,13 +96,19 @@ export default function Savdo() {
   return (
     <div className="pos-grid">
       <div>
-        <input
-          className="input"
-          placeholder="Mahsulot qidirish yoki SKU"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          style={{ marginBottom: "var(--space-4)" }}
-        />
+        <div style={{ display: "flex", gap: "var(--space-3)", marginBottom: "var(--space-4)" }}>
+          <input
+            className="input"
+            placeholder="Mahsulot qidirish yoki SKU"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+          {CAN_QUICK_ADD_ROLES.includes(me.role) && (
+            <button className="btn btn-secondary" style={{ flex: "none" }} onClick={() => setQuickAdding(true)}>
+              + Yo'q mahsulot
+            </button>
+          )}
+        </div>
         <div style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap", marginBottom: "var(--space-4)" }}>
           {cats.map((c) => (
             <button
@@ -165,6 +175,17 @@ export default function Savdo() {
         </button>
       </Blueprint>
 
+      {quickAdding && (
+        <QuickAddProduct
+          onClose={() => setQuickAdding(false)}
+          onAdded={(product, qty) => {
+            setProducts((prev) => [product, ...(prev || [])]);
+            cart.add(product, qty);
+            setQuickAdding(false);
+            flash(`${product.name} savatga qo'shildi`);
+          }}
+        />
+      )}
       <Toast text={toast} />
       <style>{`
         .pos-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:var(--space-4);align-items:start}
