@@ -147,15 +147,20 @@ export default function Mahsulotlar() {
 // small fixed square and can't host click targets inside a <button> card —
 // those stay to a single image. Without `size` (catalog / edit cards) it's a
 // full-width square with prev/next + dots to flip through all 4 photos.
+// Taxta/brus fotolari odatda tik (bo'yi eniga qaraganda katta) bo'lgani
+// uchun karточка 1:2 (eni:bo'yi) nisbatida — kvadrat emas.
+export const THUMB_RATIO = "1 / 2";
+
 export function ProductThumb({ images, size }) {
   const list = (images || []).filter(Boolean);
   const [i, setI] = useState(0);
+  const [lightbox, setLightbox] = useState(false);
   const compact = !!size;
   const idx = list.length ? ((i % list.length) + list.length) % list.length : 0;
 
   const box = compact
-    ? { width: size, height: size, background: "var(--color-accent-100)", overflow: "hidden", flex: "none" }
-    : { width: "100%", aspectRatio: "1", position: "relative", background: "var(--color-accent-100)", overflow: "hidden" };
+    ? { width: size, height: size * 2, background: "var(--color-accent-100)", overflow: "hidden", flex: "none", position: "relative" }
+    : { width: "100%", aspectRatio: THUMB_RATIO, position: "relative", background: "var(--color-accent-100)", overflow: "hidden" };
 
   if (!list.length) {
     return (
@@ -175,7 +180,8 @@ export function ProductThumb({ images, size }) {
       <img
         src={list[idx]}
         alt=""
-        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", cursor: compact ? undefined : "zoom-in" }}
+        onClick={compact ? undefined : (e) => { e.stopPropagation(); setLightbox(true); }}
         onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
       />
       {!compact && list.length > 1 && (
@@ -210,9 +216,70 @@ export function ProductThumb({ images, size }) {
           </div>
         </>
       )}
+
+      {lightbox && (
+        <div
+          onClick={(e) => { e.stopPropagation(); setLightbox(false); }}
+          style={{
+            position: "fixed", inset: 0, background: "rgba(10,12,10,.9)", zIndex: 500,
+            display: "grid", placeItems: "center", cursor: "zoom-out",
+          }}
+        >
+          <img
+            src={list[idx]}
+            alt=""
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: "92vw", maxHeight: "88vh", objectFit: "contain", cursor: "default" }}
+          />
+          <span
+            role="button"
+            aria-label="Yopish"
+            onClick={(e) => { e.stopPropagation(); setLightbox(false); }}
+            style={{ position: "fixed", top: 16, right: 16, ...lightboxBtnStyle }}
+          >
+            ×
+          </span>
+          {list.length > 1 && (
+            <>
+              <span
+                role="button"
+                aria-label="Oldingi rasm"
+                onClick={(e) => { e.stopPropagation(); setI(idx - 1); }}
+                style={{ position: "fixed", left: 16, top: "50%", transform: "translateY(-50%)", ...lightboxBtnStyle }}
+              >
+                ‹
+              </span>
+              <span
+                role="button"
+                aria-label="Keyingi rasm"
+                onClick={(e) => { e.stopPropagation(); setI(idx + 1); }}
+                style={{ position: "fixed", right: 16, top: "50%", transform: "translateY(-50%)", ...lightboxBtnStyle }}
+              >
+                ›
+              </span>
+              <div style={{ position: "fixed", bottom: 20, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 6 }}>
+                {list.map((_, di) => (
+                  <span
+                    key={di}
+                    style={{
+                      width: 7, height: 7, borderRadius: "50%",
+                      background: di === idx ? "#fff" : "rgba(255,255,255,.4)",
+                    }}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
+
+const lightboxBtnStyle = {
+  width: 36, height: 36, borderRadius: "50%", background: "rgba(255,255,255,.15)", color: "#fff",
+  display: "grid", placeItems: "center", fontSize: 20, lineHeight: 1, cursor: "pointer", userSelect: "none",
+};
 
 function thumbNavStyle(side) {
   return {
@@ -542,7 +609,7 @@ function ProductEditor({ product, categories, onAddCategory, onClose, onSaved })
                   <label
                     key={i}
                     style={{
-                      aspectRatio: "1", position: "relative", cursor: "pointer",
+                      aspectRatio: THUMB_RATIO, position: "relative", cursor: "pointer",
                       border: "1px dashed var(--color-accent-400)", overflow: "hidden",
                       display: "grid", placeItems: "center", background: "var(--color-accent-100)",
                     }}
