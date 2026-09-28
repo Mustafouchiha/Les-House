@@ -85,16 +85,16 @@ export default function CustomerCatalog({ customerTab = "catalog" }) {
   return (
     <div style={{ display: "grid", gap: "var(--space-4)" }}>
       <input className="input" placeholder="Mahsulot qidirish" value={q} onChange={(e) => setQ(e.target.value)} />
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: "var(--space-3)" }}>
+      <div className="product-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: "var(--space-3)" }}>
         {filtered.map((p) => (
-          <Blueprint key={p.id} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <Blueprint key={p.id} style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
             <ProductThumb images={p.images} />
-            <div style={{ fontFamily: "var(--font-heading)", fontSize: 17, color: "var(--color-accent-900)" }}>{p.name}</div>
+            <div className="pg-title" style={{ fontFamily: "var(--font-heading)", fontSize: 17, color: "var(--color-accent-900)" }}>{p.name}</div>
             <div style={{ fontSize: 12 }} className="muted">
               {[p.sizeLabel, p.material, p.quality].filter(Boolean).join(" · ")}
             </div>
             <div style={{ fontSize: 12 }}>⭐ {p.rating?.toFixed(1) ?? "—"} / 5</div>
-            <div style={{ fontFamily: "var(--font-heading)", fontSize: 16, color: "var(--color-accent-800)" }}>
+            <div className="pg-price" style={{ fontFamily: "var(--font-heading)", fontSize: 16, color: "var(--color-accent-800)" }}>
               {fmt(p.sellPrice)} / {UNIT_LABEL[p.unit]}
             </div>
             <span className={`tag ${AVAILABILITY_TAG[p.availability]}`} style={{ alignSelf: "start" }}>
@@ -110,6 +110,15 @@ export default function CustomerCatalog({ customerTab = "catalog" }) {
           </Blueprint>
         ))}
       </div>
+      <style>{`
+        @media (max-width: 640px) {
+          .product-grid { grid-template-columns: repeat(2, 1fr) !important; gap: var(--space-2) !important; }
+          .product-grid .blueprint { padding: var(--space-3) !important; }
+          .product-grid .blueprint * { min-width: 0; overflow-wrap: anywhere; }
+          .product-grid .pg-title { font-size: 14px !important; }
+          .product-grid .pg-price { font-size: 13px !important; }
+        }
+      `}</style>
     </div>
   );
 }

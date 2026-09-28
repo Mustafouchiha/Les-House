@@ -60,19 +60,19 @@ export default function Mahsulotlar() {
           </button>
         )}
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: "var(--space-4)" }}>
+      <div className="product-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: "var(--space-4)" }}>
         {filtered.map((p) => (
-          <Blueprint key={p.id} style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
+          <Blueprint key={p.id} style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)", minWidth: 0 }}>
             <ProductThumb images={p.images} />
             <div style={{ fontSize: 10, letterSpacing: ".12em", color: "var(--color-accent-600)" }}>{p.sku}</div>
-            <div style={{ fontFamily: "var(--font-heading)", fontSize: 19, lineHeight: 1.15, color: "var(--color-accent-900)" }}>{p.name}</div>
+            <div className="pg-title" style={{ fontFamily: "var(--font-heading)", fontSize: 19, lineHeight: 1.15, color: "var(--color-accent-900)" }}>{p.name}</div>
             <div style={{ fontSize: 12, color: "var(--color-neutral-800)" }}>
               {[p.categoryName, p.material, p.quality, p.sizeLabel].filter(Boolean).join(" · ")}
             </div>
             <div style={{ fontSize: 12 }}>⭐ {p.rating?.toFixed(1) ?? "—"} / 5</div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: "var(--space-3)", borderTop: "1px solid var(--color-accent-200)", paddingTop: "var(--space-3)" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "baseline", marginTop: "var(--space-3)", borderTop: "1px solid var(--color-accent-200)", paddingTop: "var(--space-3)" }}>
               <span className="kicker">Narx</span>
-              <span style={{ fontFamily: "var(--font-heading)", fontSize: 18, color: "var(--color-accent-800)" }}>
+              <span className="pg-price" style={{ fontFamily: "var(--font-heading)", fontSize: 18, color: "var(--color-accent-800)" }}>
                 {fmt(p.sellPrice)} / {UNIT_LABEL[p.unit]}
               </span>
             </div>
@@ -139,6 +139,15 @@ export default function Mahsulotlar() {
         </Dialog>
       )}
       <Toast text={toast} />
+      <style>{`
+        @media (max-width: 640px) {
+          .product-grid { grid-template-columns: repeat(2, 1fr) !important; gap: var(--space-3) !important; }
+          .product-grid .blueprint { padding: var(--space-3) !important; }
+          .product-grid .blueprint * { min-width: 0; overflow-wrap: anywhere; }
+          .product-grid .pg-title { font-size: 15px !important; }
+          .product-grid .pg-price { font-size: 14px !important; }
+        }
+      `}</style>
     </div>
   );
 }
