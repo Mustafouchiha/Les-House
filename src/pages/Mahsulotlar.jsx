@@ -326,6 +326,9 @@ function fileToDataUrl(file, maxDim = 1000, quality = 0.82) {
 
 export const DIM_UNITS = ["mm", "sm", "dm", "m"];
 export const TO_MM = { mm: 1, sm: 10, dm: 100, m: 1000 };
+// convert a stored mm value back to the unit it was originally entered in,
+// so editing a product shows e.g. "10" / "sm" instead of always mm
+const fromMm = (mm, unit) => (mm == null ? "" : +(mm / (TO_MM[unit] || 1)).toFixed(4));
 const STEPS = ["Asosiy", "O'lcham", "Narx", "Qo'shimcha"];
 
 const EMPTY_FORM = {
@@ -351,9 +354,12 @@ function ProductEditor({ product, categories, onAddCategory, onClose, onSaved })
           woodType: product.woodType ?? "",
           quality: product.quality ?? "",
           unit: product.unit ?? "PIECE",
-          dimX: product.dimX ?? "",
-          dimY: product.dimY ?? "",
-          length: product.length ?? "",
+          dimX: fromMm(product.dimX, product.dimXUnit || "mm"),
+          dimXUnit: product.dimXUnit || "mm",
+          dimY: fromMm(product.dimY, product.dimYUnit || "mm"),
+          dimYUnit: product.dimYUnit || "mm",
+          length: fromMm(product.length, product.lengthUnit || "mm"),
+          lengthUnit: product.lengthUnit || "mm",
           sellPrice: product.sellPrice ?? "",
           minPrice: product.minPrice ?? "",
           startPrice: product.startPrice ?? "",
@@ -409,8 +415,11 @@ function ProductEditor({ product, categories, onAddCategory, onClose, onSaved })
       quality: f.quality || null,
       unit: f.unit,
       dimX: dim("dimX", "dimXUnit"),
+      dimXUnit: f.dimX === "" ? null : f.dimXUnit,
       dimY: dim("dimY", "dimYUnit"),
+      dimYUnit: f.dimY === "" ? null : f.dimYUnit,
       length: dim("length", "lengthUnit"),
+      lengthUnit: f.length === "" ? null : f.lengthUnit,
       sellPrice: sell,
       minPrice: num(f.minPrice) ?? 0,
       startPrice: f.startPrice === "" ? sell : (num(f.startPrice) ?? sell),

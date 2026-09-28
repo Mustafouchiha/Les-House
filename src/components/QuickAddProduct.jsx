@@ -46,8 +46,11 @@ export default function QuickAddProduct({ onClose, onAdded }) {
         minPrice: 0,
         cost,
         dimX: dim(f.dimX, f.dimXUnit),
+        dimXUnit: f.dimX === "" ? null : f.dimXUnit,
         dimY: dim(f.dimY, f.dimYUnit),
+        dimYUnit: f.dimY === "" ? null : f.dimYUnit,
         length: dim(f.length, f.lengthUnit),
+        lengthUnit: f.length === "" ? null : f.lengthUnit,
         note: "Savdo ekranidan tezkor qo'shildi",
       });
       await api.post("/inventory/entry", { productId: product.id, quantity: qty, unitCost: cost });
